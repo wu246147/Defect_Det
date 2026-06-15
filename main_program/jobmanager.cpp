@@ -373,7 +373,7 @@ int JobManager::mvs_open_device()
             }
             if(cam_index == -1)
             {
-                LOGE("无法找到到相机%d，请确认相机是否已经启动，或ip是否设置正确。", i);
+                LOGE("could find cam%d,Confirm if the camera has been turned on or if the IP settings are correct.", i);
                 continue;
             }
             cams[i].m_pcMyCamera = new CMvCamera;
@@ -813,7 +813,7 @@ void JobManager::rundemo(int id)
 {
     int CamID = id;
     jobworkers[CamID].is_busy = true;
-    jobworkers[CamID].isSiming = true;
+    // jobworkers[CamID].isSiming = true;
     jobworkers[CamID].run();
     // jobworkers[CamID].isSiming = false;
 

@@ -20,16 +20,12 @@ class DialogRobotAcq : public QDialog
 public:
     explicit DialogRobotAcq(QWidget *parent = nullptr);
     ~DialogRobotAcq();
-    DialogRobotAcq(JobManager *j, Communication *c, COM *com, QWidget *parent = nullptr);
+    DialogRobotAcq(JobManager *j, COM *com, QWidget *parent = nullptr);
 
     JobManager *jobmanager = nullptr;
 
     //机器人通讯管理对象
     CommunicationModbus *communicationModbus = nullptr;
-
-    //机器人2通讯管理对象
-    Communication *communication = nullptr;
-
 
     //光源通讯管理对象
     COM *communicationCOM = nullptr;

@@ -102,10 +102,13 @@ int main(int argc, char *argv[])
     a.processEvents();
     MainWindow w;
     splash.finish(&w);
+
+
     //log显示
     std::shared_ptr<qtStreamBuf>buffer;
     buffer = std::make_shared<qtStreamBuf>(&w);
     new(&std::cout) std::ostream(buffer.get());
+
     LOGE_HIGH("----------------------------------------------");
     LOGE_HIGH("程序打开");
     w.setWindowFlags(Qt::FramelessWindowHint);

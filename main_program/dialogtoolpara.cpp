@@ -311,23 +311,17 @@ void DialogToolPara::update_run_roi()
         // //     myRectItem_run = nullptr;
         // // }
 
-        if(this->myRectItem_caliperLine == nullptr)
-        {
-            return;
-        }
-
-        QPointF startPoint, endPoint;
-        //同步train_roi
-        this->myRectItem_caliperLine->getPoint(startPoint, endPoint);
-
-        jobmanager->jobworkers[cam_id].CaliperROIList[0] = cv::Point2f(startPoint.x(), startPoint.y());
-        jobmanager->jobworkers[cam_id].CaliperROIList[1] = cv::Point2f(endPoint.x(), endPoint.y());
-
-        // if(myRectItem_caliperLine != nullptr)
+        // if(this->myRectItem_caliperLine == nullptr)
         // {
-        //     delete myRectItem_caliperLine;
-        //     myRectItem_caliperLine = nullptr;
+        //     return;
         // }
+
+        // QPointF startPoint, endPoint;
+        // //同步train_roi
+        // this->myRectItem_caliperLine->getPoint(startPoint, endPoint);
+
+        // jobmanager->jobworkers[cam_id].CaliperROIList[0] = cv::Point2f(startPoint.x(), startPoint.y());
+        // jobmanager->jobworkers[cam_id].CaliperROIList[1] = cv::Point2f(endPoint.x(), endPoint.y());
 
 
     }
@@ -391,14 +385,14 @@ void DialogToolPara::show_display()
     {
         jobmanager->jobworkers[cam_id].display->myGraphicsView->setImage(MatToPixmap(show_img));
 
-        {
-            myRectItem_caliperLine = new MyGraphicLineItem(QPointF(jobmanager->jobworkers[cam_id]. CaliperROIList[0].x, jobmanager->jobworkers[cam_id]. CaliperROIList[0].y),
-                QPointF(jobmanager->jobworkers[cam_id]. CaliperROIList[1].x, jobmanager->jobworkers[cam_id]. CaliperROIList[1].y));
-            this->myRectItem_caliperLine->setToolTip("caliper_line");
-            this->myRectItem_caliperLine->SetColor(Qt::darkGreen);
-            jobmanager->jobworkers[cam_id].display->myGraphicsView->addItem(myRectItem_caliperLine, true);
+        // {
+        //     myRectItem_caliperLine = new MyGraphicLineItem(QPointF(jobmanager->jobworkers[cam_id]. CaliperROIList[0].x, jobmanager->jobworkers[cam_id]. CaliperROIList[0].y),
+        //         QPointF(jobmanager->jobworkers[cam_id]. CaliperROIList[1].x, jobmanager->jobworkers[cam_id]. CaliperROIList[1].y));
+        //     this->myRectItem_caliperLine->setToolTip("caliper_line");
+        //     this->myRectItem_caliperLine->SetColor(Qt::darkGreen);
+        //     jobmanager->jobworkers[cam_id].display->myGraphicsView->addItem(myRectItem_caliperLine, true);
 
-        }
+        // }
     }
 
 
@@ -609,16 +603,20 @@ void DialogToolPara::updata_control_value()
     is_loading = true;
 
 
-    ui->spinBox_location_caliper_roi_w->setValue(jobmanager->jobworkers[cam_id].CaliperROIW);
-    ui->spinBox_location_caliper_roi_h->setValue(jobmanager->jobworkers[cam_id].CaliperROIH);
-    ui->spinBox_location_caliper_roi_count->setValue(jobmanager->jobworkers[cam_id].CaliperROIC);
+    // ui->spinBox_location_caliper_roi_w->setValue(jobmanager->jobworkers[cam_id].CaliperROIW);
+    // ui->spinBox_location_caliper_roi_h->setValue(jobmanager->jobworkers[cam_id].CaliperROIH);
+    // ui->spinBox_location_caliper_roi_count->setValue(jobmanager->jobworkers[cam_id].CaliperROIC);
 
-    ui->comboBox_location_caliper1_select->setCurrentIndex(jobmanager->jobworkers[cam_id].caliperSelectPosition);
-    ui->comboBox_location_caliper1_transition->setCurrentIndex(jobmanager->jobworkers[cam_id].caliperPolarity);
-    ui->spinBox_location_caliper1_thre->setValue(jobmanager->jobworkers[cam_id].caliperThre);
+    // ui->comboBox_location_caliper1_select->setCurrentIndex(jobmanager->jobworkers[cam_id].caliperSelectPosition);
+    // ui->comboBox_location_caliper1_transition->setCurrentIndex(jobmanager->jobworkers[cam_id].caliperPolarity);
+    // ui->spinBox_location_caliper1_thre->setValue(jobmanager->jobworkers[cam_id].caliperThre);
 
-    ui->doubleSpinBox_distance_thre_min->setValue(jobmanager->distance_thre_min);
-    ui->doubleSpinBox_distance_thre_max->setValue(jobmanager->distance_thre_max);
+    // ui->doubleSpinBox_distance_thre_min->setValue(jobmanager->distance_thre_min);
+    // ui->doubleSpinBox_distance_thre_max->setValue(jobmanager->distance_thre_max);
+
+    ui->doubleSpinBox_object_detect_thre->setValue(jobmanager->jobworkers[cam_id].defectDetThre);
+    ui->spinBox_defect_area_thre->setValue(jobmanager->jobworkers[cam_id].defectAreaThre);
+
 
     ui->lineEdit_simulation_path->setText(jobmanager->jobworkers[cam_id].src_image_dir.data());
 
@@ -1061,7 +1059,7 @@ void DialogToolPara::on_tableWidget_simualtion_filePath_itemSelectionChanged()
         std::string src_image_path = jobmanager->jobworkers[cam_id].src_image_dir + "/" + ui->tableWidget_simualtion_filePath->item(select_simulation_img_id, 0)->text().toStdString();
         //切换图片
         cv::Mat src_image;
-        src_image = cv::imread(src_image_path, -1);
+        src_image = cv::imread(src_image_path, 1);
         jobmanager->jobworkers[cam_id].img = cv::Mat();
         jobmanager->jobworkers[cam_id].img = src_image;
         //显示图片
@@ -1152,5 +1150,25 @@ void DialogToolPara::on_spinBox_location_caliper_roi_w_valueChanged(int arg1)
     }
     jobmanager->jobworkers[cam_id].CaliperROIW = arg1;
 
+}
+
+
+void DialogToolPara::on_doubleSpinBox_object_detect_thre_valueChanged(double arg1)
+{
+    if(is_loading)
+    {
+        return;
+    }
+    jobmanager->jobworkers[cam_id].defectDetThre = arg1;
+}
+
+
+void DialogToolPara::on_spinBox_defect_area_thre_valueChanged(int arg1)
+{
+    if(is_loading)
+    {
+        return;
+    }
+    jobmanager->jobworkers[cam_id].defectAreaThre = arg1;
 }
 

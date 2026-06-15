@@ -30,6 +30,8 @@
 #include "imgprocesstool.h"
 #include "calipertool.h"
 #include "shapematch.h"
+#include "yolosegonnx.h"
+
 //相机库
 #include "MvCamera.h"
 //交互库
@@ -40,8 +42,11 @@
 #include "mygraphicpointitem.h"
 #include "mygraphiclineitem.h"
 
+#include "mytextitem.h"
+
 #include "mylog.h"
 #include <type_traits>
+
 
 #pragma execution_character_set("utf-8")
 
@@ -360,6 +365,12 @@ public:
     ///输出结果
     int resultType = 0; //0为像素坐标，1为实际坐标，2为相对标准位置坐标
 
+    //缺陷检测参数
+    double defectDetThre = 0.5;
+    int defectAreaThre = 100;
+
+
+
     ///
     /// 不保存参数
     ///
@@ -367,6 +378,8 @@ public:
     //当前图片
     cv::Mat img;
     // cv::Mat train_img;
+
+    RaivasSegHandle detSegModel = nullptr;
 
     //定位检测结果
     //转换矩阵结果
@@ -384,6 +397,7 @@ public:
     bool locationResult = true;
     bool locationShapeResult  = true;
     bool locationCaliperResult  = true;
+    bool defectDetResult  = true;
 
     //不用了
 
@@ -495,6 +509,12 @@ public:
     cv::Vec4f fitline = {1.0f, 1.0f, 1.0f, 1.0f};
     std::vector<cv::Point2f> caliperLocationOriginPoints;
     std::vector<bool> caliperLocationResult;
+
+
+    //缺陷检测结果
+    std::vector<DetectSegResult> defectDetResults;
+
+
 
     bool isDebug = false;
 
@@ -796,6 +816,14 @@ public:
             ar &name;
             ar &resultType;
 
+            name = "defectDetThre";
+            ar &name;
+            ar &defectDetThre;
+            name = "defectAreaThre";
+            ar &name;
+            ar &defectAreaThre;
+
+
             name = "rotateType";
             ar &name;
             ar &rotateType;
@@ -985,6 +1013,14 @@ public:
                         ar &resultType;
                     }
 
+                    else if(name.compare("defectDetThre") == 0)
+                    {
+                        ar &defectDetThre;
+                    }
+                    else if(name.compare("defectAreaThre") == 0)
+                    {
+                        ar &defectAreaThre;
+                    }
                     //补偿
                     else if(name.compare("xb") == 0)
                     {
@@ -1065,6 +1101,10 @@ public:
     ///
     void runCaliperTool(cv::Mat img);
 
+    ///
+    /// \brief runDefectDetTool
+    ///
+    void runDefectDetTool(cv::Mat img);
 
     ///
     /// \brief runLocation

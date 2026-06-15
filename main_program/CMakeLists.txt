@@ -1,13 +1,14 @@
-﻿cmake_minimum_required(VERSION 3.5)
+﻿cmake_minimum_required(VERSION 3.16)
 
-project(DimensionInspection LANGUAGES CXX)
+project(Defect_Det VERSION 1.0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 
 #qt
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -19,6 +20,24 @@ find_package(Qt5 COMPONENTS Widgets Xml Concurrent Network SerialBus SerialPort 
 
 #统一打包
 set(LIB_DIR "${PROJECT_SOURCE_DIR}/../lib/x64-win64")
+
+# -------------- ONNX Runtime --------------
+# 路径指向你解压的目录
+set(ORT_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/onnxruntime)
+set(ORT_INCLUDE ${ORT_ROOT}/include)
+message(ORT_INCLUDE:${ORT_INCLUDE})
+include_directories(${ORT_INCLUDE})
+
+if(WIN32)
+    set(ORT_LIB ${ORT_ROOT}/lib/onnxruntime.lib)
+    # # DLL 需要拷贝到可执行文件同目录
+    # add_custom_command(TARGET opencv_onnxruntime POST_BUILD
+    #     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    #     ${ORT_ROOT}/lib/onnxruntime.dll
+    #     $<TARGET_FILE_DIR:opencv_onnxruntime>)
+else()
+    set(ORT_LIB ${ORT_ROOT}/lib/libonnxruntime.so)
+endif()
 
 #mvs
 include_directories(${PROJECT_SOURCE_DIR}/../include/mvs)
@@ -43,7 +62,7 @@ file(GLOB ALGORITHM_LIBS "${LIB_DIR}/algorithm/*.lib")
 # include_directories(${PROJECT_SOURCE_DIR}/../include/S7)
 file(GLOB S7_LIBS "${LIB_DIR}/S7/*.lib")
 
-add_executable(DimensionInspection
+add_executable(Defect_Det
     main.cpp
     ./algorithm/qtstreambuf.cpp
     ./algorithm/qtstreambuf.h
@@ -93,6 +112,14 @@ add_executable(DimensionInspection
     tool/projecttool.h
     tool/communicationcom.cpp
     tool/communicationcom.h
+    tool/toyopuc.cpp
+    tool/toyopuc.h
+    tool/toyopuc_caller.cpp
+    tool/toyopuc_caller.h
+    tool/IOPara.h
+
+    mytextitem.cpp
+    mytextitem.h
 
     #S7通讯
     tool/plc_siemens.cpp
@@ -102,9 +129,11 @@ add_executable(DimensionInspection
   )
 
 message(ALGORITHM_LIBS:${ALGORITHM_LIBS})
+message(OPENCV_LIBS:${OPENCV_LIBS})
 
-target_link_libraries(DimensionInspection Qt5::Widgets Qt5::Xml Qt5::Concurrent Qt5::Network Qt5::SerialBus Qt5::SerialPort)
-target_link_libraries(DimensionInspection ${BOOST_LIBS} ${OPENCV_LIBS} ${ALGORITHM_LIBS} ${S7_LIBS})
+
+target_link_libraries(Defect_Det Qt5::Widgets Qt5::Xml Qt5::Concurrent Qt5::Network Qt5::SerialBus Qt5::SerialPort)
+target_link_libraries(Defect_Det ${BOOST_LIBS} ${OPENCV_LIBS} ${ALGORITHM_LIBS} ${S7_LIBS} ${ORT_LIB})
 
 # 文件打包
 file(COPY ${PROJECT_SOURCE_DIR}/qss DESTINATION ${PROJECT_BINARY_DIR})

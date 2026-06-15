@@ -188,6 +188,10 @@ private slots:
 
     void on_spinBox_location_caliper_roi_w_valueChanged(int arg1);
 
+    void on_doubleSpinBox_object_detect_thre_valueChanged(double arg1);
+
+    void on_spinBox_defect_area_thre_valueChanged(int arg1);
+
 signals:
     void save_file_signal();
 

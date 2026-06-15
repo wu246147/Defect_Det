@@ -15,13 +15,12 @@ DialogRobotAcq::~DialogRobotAcq()
     delete ui;
 }
 
-DialogRobotAcq::DialogRobotAcq(JobManager *j, Communication *c, COM *com, QWidget *parent):
+DialogRobotAcq::DialogRobotAcq(JobManager *j, COM *com, QWidget *parent):
     QDialog(parent),
     ui(new Ui::DialogRobotAcq)
 {
     ui->setupUi(this);
     jobmanager = j;
-    communication = c;
 
     communicationCOM = com;
 
@@ -69,8 +68,6 @@ void DialogRobotAcq::calibrationCam(float robotX, float robotY, float robotZ, fl
         on_pushButton_save_data_clicked();
         // LOGE("555");
 
-        //返回结果
-        communication->tcp_send("1,0,0,0,0,0,0,0,0,");
         // LOGE("666");
     });
 

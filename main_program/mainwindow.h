@@ -34,7 +34,10 @@
 #include "tool/communicationmodbus.h"
 #include "tool/projecttool.h"
 #include "tool/plc_siemens.h"
+#include "tool/toyopuc_caller.h"
 #include "dialogrobotacq.h"
+
+#include "tool/IOPara.h"
 
 #pragma execution_character_set("utf-8")
 
@@ -159,6 +162,17 @@ public:
     ///
     bool writeCommunicationPara();
 
+    ///
+    /// \brief readIOPara 读取communication文件
+    /// \return
+    ///
+    bool readIOPara();
+
+    ///
+    /// \brief writeIOPara 保存communication文件
+    /// \return
+    ///
+    bool writeIOPara();
     ///
     /// \brief read_config 读取config文件
     /// \return
@@ -549,7 +563,7 @@ private slots:
     void CheckCam(int cam_id, int worker_id);
 
 
-    void on_pushButton_sim_2_clicked(bool checked);
+    void on_pushButton_auto_clicked(bool checked);
 
     void robotGrab();
 
@@ -649,7 +663,7 @@ private:
     QString job_name;
     //作业相机个数，默认为5，正常不能改变
     const int cam_count = 1;
-    const int jobworker_count = 2;
+    const int jobworker_count = 1;
 
     //整个作业管理对象
     JobManager jobmanager;
@@ -662,11 +676,15 @@ private:
     //机器人2通讯管理对象
     Communication communication;
 
-    //plc 通讯
+    //西门子 plc 通讯 s7
     PLC_Siemens *plcSiemens;
+
+    //丰田plc通讯
+    ToyopucCaller *plcToyopuc = nullptr;
 
     QString plcIPAddress = "192.168.1.5";
     int DB_No = 1;
+    int port = 6000;
 
     //光源通讯管理对象
     COM communicationCOM;

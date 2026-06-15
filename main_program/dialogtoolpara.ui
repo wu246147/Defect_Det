@@ -49,131 +49,6 @@
           <string>运行参数</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_3">
-          <item row="0" column="0" colspan="2">
-           <widget class="QGroupBox" name="groupBox_caliper_location1">
-            <property name="title">
-             <string>卡尺参数</string>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_14">
-             <item row="1" column="0">
-              <widget class="QLabel" name="label_73">
-               <property name="text">
-                <string>卡尺高度</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="1">
-              <widget class="QComboBox" name="comboBox_location_caliper1_transition">
-               <item>
-                <property name="text">
-                 <string>黑到白</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>白到黑</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-             <item row="3" column="0">
-              <widget class="QLabel" name="label_45">
-               <property name="text">
-                <string>找边极性</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_72">
-               <property name="text">
-                <string>卡尺宽度</string>
-               </property>
-              </widget>
-             </item>
-             <item row="5" column="0">
-              <widget class="QLabel" name="label_36">
-               <property name="text">
-                <string>阈值</string>
-               </property>
-              </widget>
-             </item>
-             <item row="5" column="1">
-              <widget class="QSpinBox" name="spinBox_location_caliper1_thre">
-               <property name="minimum">
-                <number>5</number>
-               </property>
-               <property name="maximum">
-                <number>60</number>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="1">
-              <widget class="QComboBox" name="comboBox_location_caliper1_select">
-               <item>
-                <property name="text">
-                 <string>第一边</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>最后一边</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-             <item row="4" column="0">
-              <widget class="QLabel" name="label_44">
-               <property name="text">
-                <string>找边模式</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="label_74">
-               <property name="text">
-                <string>卡尺个数</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QSpinBox" name="spinBox_location_caliper_roi_w">
-               <property name="minimum">
-                <number>5</number>
-               </property>
-               <property name="maximum">
-                <number>1000</number>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QSpinBox" name="spinBox_location_caliper_roi_h">
-               <property name="minimum">
-                <number>5</number>
-               </property>
-               <property name="maximum">
-                <number>1000</number>
-               </property>
-               <property name="value">
-                <number>100</number>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="QSpinBox" name="spinBox_location_caliper_roi_count">
-               <property name="minimum">
-                <number>5</number>
-               </property>
-               <property name="maximum">
-                <number>200</number>
-               </property>
-               <property name="value">
-                <number>10</number>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
           <item row="3" column="0">
            <widget class="QPushButton" name="pushButton_run">
             <property name="minimumSize">
@@ -187,43 +62,34 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
-           <widget class="QDoubleSpinBox" name="doubleSpinBox_distance_thre_min">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>置信度阈值</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="doubleSpinBox_object_detect_thre">
             <property name="minimum">
-             <double>0.000000000000000</double>
+             <double>0.250000000000000</double>
             </property>
             <property name="maximum">
-             <double>99999.000000000000000</double>
-            </property>
-            <property name="value">
-             <double>0.000000000000000</double>
+             <double>1.000000000000000</double>
             </property>
            </widget>
           </item>
           <item row="1" column="0">
-           <widget class="QLabel" name="label_75">
+           <widget class="QLabel" name="label_3">
             <property name="text">
-             <string>尺寸最小限制范围：</string>
+             <string>缺陷面积阈值</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_76">
-            <property name="text">
-             <string>尺寸最大限制范围：</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QDoubleSpinBox" name="doubleSpinBox_distance_thre_max">
-            <property name="minimum">
-             <double>0.000000000000000</double>
-            </property>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="spinBox_defect_area_thre">
             <property name="maximum">
-             <double>99999.000000000000000</double>
-            </property>
-            <property name="value">
-             <double>99999.000000000000000</double>
+             <number>9999999</number>
             </property>
            </widget>
           </item>
@@ -267,80 +133,115 @@
         <rect>
          <x>100</x>
          <y>50</y>
-         <width>411</width>
-         <height>571</height>
+         <width>471</width>
+         <height>701</height>
         </rect>
        </property>
        <property name="title">
         <string>垃圾桶</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_11">
-        <item row="21" column="1" colspan="2">
-         <widget class="QPushButton" name="pushButton_set_roi">
-          <property name="text">
-           <string>重绘检测roi</string>
+        <item row="4" column="0">
+         <widget class="QGroupBox" name="groupBox_ignore_pts">
+          <property name="title">
+           <string>屏蔽参数</string>
           </property>
+          <layout class="QGridLayout" name="gridLayout_5">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_14">
+             <property name="text">
+              <string>屏蔽区</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="comboBox_ignore_roi"/>
+           </item>
+           <item row="1" column="0">
+            <widget class="QPushButton" name="pushButton_set_ignore_roi">
+             <property name="text">
+              <string>重绘屏蔽roi</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QPushButton" name="pushButton_del_ignore_roi">
+             <property name="text">
+              <string>删除屏蔽roi</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </item>
-        <item row="20" column="0">
-         <widget class="QSpinBox" name="spinBox_caliper_distance1_limit">
-          <property name="minimum">
+        <item row="27" column="1">
+         <widget class="QDoubleSpinBox" name="doubleSpinBox_r_robot_b">
+          <property name="decimals">
            <number>5</number>
           </property>
-          <property name="maximum">
-           <number>99999</number>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="0">
-         <widget class="QLabel" name="label_13">
-          <property name="text">
-           <string>输入通道</string>
-          </property>
-         </widget>
-        </item>
-        <item row="17" column="3" colspan="2">
-         <widget class="QSpinBox" name="spinBox_thre_blob">
           <property name="minimum">
-           <number>1</number>
+           <double>-999999.000000000000000</double>
           </property>
           <property name="maximum">
-           <number>255</number>
+           <double>999999.000000000000000</double>
           </property>
-          <property name="value">
-           <number>10</number>
-          </property>
-         </widget>
-        </item>
-        <item row="22" column="4">
-         <widget class="QLabel" name="label_39">
-          <property name="text">
-           <string>输出结果格式</string>
+          <property name="singleStep">
+           <double>0.010000000000000</double>
           </property>
          </widget>
         </item>
-        <item row="24" column="1">
-         <widget class="QCheckBox" name="checkBox_is_remove_duplicates_result">
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="14" column="0">
-         <widget class="QGroupBox" name="groupBox_5">
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="groupBox_train">
           <property name="title">
-           <string>定位卡尺4</string>
+           <string>训练参数</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout_9">
+          <layout class="QGridLayout" name="gridLayout_4" columnstretch="0,0">
+           <item row="0" column="1">
+            <widget class="QPushButton" name="pushButton_train">
+             <property name="text">
+              <string>训练</string>
+             </property>
+            </widget>
+           </item>
            <item row="0" column="0">
-            <widget class="QLabel" name="label_50">
+            <widget class="QPushButton" name="pushButton_set_train_image">
+             <property name="text">
+              <string>设置当前图片为训练图片</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="11" column="1" colspan="2">
+         <widget class="QLabel" name="label_10">
+          <property name="text">
+           <string>检测区</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="0">
+         <widget class="QLabel" name="label_9">
+          <property name="text">
+           <string>定位二值化阈值</string>
+          </property>
+         </widget>
+        </item>
+        <item row="13" column="0">
+         <widget class="QGroupBox" name="groupBox_4">
+          <property name="title">
+           <string>定位卡尺3</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_8">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_49">
              <property name="text">
               <string>找边极性</string>
              </property>
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QComboBox" name="comboBox_location_caliper4_transition">
+            <widget class="QComboBox" name="comboBox_location_caliper3_transition">
              <item>
               <property name="text">
                <string>所有</string>
@@ -359,14 +260,14 @@
             </widget>
            </item>
            <item row="1" column="0">
-            <widget class="QLabel" name="label_52">
+            <widget class="QLabel" name="label_51">
              <property name="text">
               <string>找边模式</string>
              </property>
             </widget>
            </item>
            <item row="1" column="1">
-            <widget class="QComboBox" name="comboBox_location_caliper4_select">
+            <widget class="QComboBox" name="comboBox_location_caliper3_select">
              <item>
               <property name="text">
                <string>所有</string>
@@ -385,14 +286,14 @@
             </widget>
            </item>
            <item row="2" column="0">
-            <widget class="QLabel" name="label_54">
+            <widget class="QLabel" name="label_53">
              <property name="text">
               <string>阈值</string>
              </property>
             </widget>
            </item>
            <item row="2" column="1">
-            <widget class="QSpinBox" name="spinBox_location_caliper4_thre">
+            <widget class="QSpinBox" name="spinBox_location_caliper3_thre">
              <property name="minimum">
               <number>5</number>
              </property>
@@ -404,101 +305,11 @@
           </layout>
          </widget>
         </item>
-        <item row="22" column="3">
-         <widget class="QComboBox" name="comboBox_resultType">
-          <item>
-           <property name="text">
-            <string>定位像素坐标</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>定位机械臂坐标</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>定位相对坐标</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item row="17" column="0">
-         <widget class="QGroupBox" name="groupBox_8">
-          <property name="title">
-           <string>检测卡尺3</string>
+        <item row="10" column="2">
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string>模式</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout_12">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_58">
-             <property name="text">
-              <string>找边极性</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QComboBox" name="comboBox_caliper3_transition">
-             <item>
-              <property name="text">
-               <string>所有</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>黑到白</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>白到黑</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_59">
-             <property name="text">
-              <string>找边模式</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QComboBox" name="comboBox_caliper3_select">
-             <item>
-              <property name="text">
-               <string>所有</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>第一边</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>最后一边</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_60">
-             <property name="text">
-              <string>阈值</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QSpinBox" name="spinBox_caliper3_thre">
-             <property name="minimum">
-              <number>5</number>
-             </property>
-             <property name="maximum">
-              <number>60</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
          </widget>
         </item>
         <item row="7" column="3">
@@ -675,28 +486,26 @@
           </layout>
          </widget>
         </item>
-        <item row="17" column="1" colspan="2">
-         <widget class="QLabel" name="label_6">
-          <property name="text">
-           <string>斑点检测阈值</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="3">
-         <widget class="QGroupBox" name="groupBox_caliper_location2">
+        <item row="17" column="0">
+         <widget class="QGroupBox" name="groupBox_8">
           <property name="title">
-           <string>定位卡尺2</string>
+           <string>检测卡尺3</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout_6">
+          <layout class="QGridLayout" name="gridLayout_12">
            <item row="0" column="0">
-            <widget class="QLabel" name="label_48">
+            <widget class="QLabel" name="label_58">
              <property name="text">
               <string>找边极性</string>
              </property>
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QComboBox" name="comboBox_location_caliper2_transition">
+            <widget class="QComboBox" name="comboBox_caliper3_transition">
+             <item>
+              <property name="text">
+               <string>所有</string>
+              </property>
+             </item>
              <item>
               <property name="text">
                <string>黑到白</string>
@@ -710,14 +519,19 @@
             </widget>
            </item>
            <item row="1" column="0">
-            <widget class="QLabel" name="label_46">
+            <widget class="QLabel" name="label_59">
              <property name="text">
               <string>找边模式</string>
              </property>
             </widget>
            </item>
            <item row="1" column="1">
-            <widget class="QComboBox" name="comboBox_location_caliper2_select">
+            <widget class="QComboBox" name="comboBox_caliper3_select">
+             <item>
+              <property name="text">
+               <string>所有</string>
+              </property>
+             </item>
              <item>
               <property name="text">
                <string>第一边</string>
@@ -731,14 +545,14 @@
             </widget>
            </item>
            <item row="2" column="0">
-            <widget class="QLabel" name="label_47">
+            <widget class="QLabel" name="label_60">
              <property name="text">
               <string>阈值</string>
              </property>
             </widget>
            </item>
            <item row="2" column="1">
-            <widget class="QSpinBox" name="spinBox_location_caliper2_thre">
+            <widget class="QSpinBox" name="spinBox_caliper3_thre">
              <property name="minimum">
               <number>5</number>
              </property>
@@ -750,23 +564,309 @@
           </layout>
          </widget>
         </item>
-        <item row="6" column="1">
-         <widget class="QSpinBox" name="spinBox_thre_location">
+        <item row="14" column="3" colspan="2">
+         <widget class="QSpinBox" name="spinBox_greasy_dirt_area_thre">
+          <property name="maximum">
+           <number>999999</number>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="4">
+         <widget class="QPushButton" name="pushButton_show_img">
+          <property name="text">
+           <string>显示原图</string>
+          </property>
+         </widget>
+        </item>
+        <item row="11" column="3" colspan="2">
+         <widget class="QComboBox" name="comboBox_roi"/>
+        </item>
+        <item row="16" column="3" colspan="2">
+         <widget class="QSpinBox" name="spinBox_img_process_kernal_size">
+          <property name="minimum">
+           <number>3</number>
+          </property>
+          <property name="maximum">
+           <number>31</number>
+          </property>
+          <property name="singleStep">
+           <number>2</number>
+          </property>
+         </widget>
+        </item>
+        <item row="10" column="1">
+         <widget class="QComboBox" name="comboBox_type">
+          <item>
+           <property name="text">
+            <string>运行模式</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>训练模式</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="21" column="1" colspan="2">
+         <widget class="QPushButton" name="pushButton_set_roi">
+          <property name="text">
+           <string>重绘检测roi</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="0">
+         <widget class="QPushButton" name="pushButton_add_roi">
+          <property name="text">
+           <string>添加检测roi</string>
+          </property>
+         </widget>
+        </item>
+        <item row="27" column="3">
+         <widget class="QGroupBox" name="groupBox_caliper_location1">
+          <property name="title">
+           <string>卡尺参数</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_14">
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_73">
+             <property name="text">
+              <string>卡尺高度</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QComboBox" name="comboBox_location_caliper1_transition">
+             <item>
+              <property name="text">
+               <string>黑到白</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>白到黑</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_45">
+             <property name="text">
+              <string>找边极性</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_72">
+             <property name="text">
+              <string>卡尺宽度</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QLabel" name="label_36">
+             <property name="text">
+              <string>阈值</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QSpinBox" name="spinBox_location_caliper1_thre">
+             <property name="minimum">
+              <number>5</number>
+             </property>
+             <property name="maximum">
+              <number>60</number>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QComboBox" name="comboBox_location_caliper1_select">
+             <item>
+              <property name="text">
+               <string>第一边</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>最后一边</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_44">
+             <property name="text">
+              <string>找边模式</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_74">
+             <property name="text">
+              <string>卡尺个数</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QSpinBox" name="spinBox_location_caliper_roi_w">
+             <property name="minimum">
+              <number>5</number>
+             </property>
+             <property name="maximum">
+              <number>1000</number>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QSpinBox" name="spinBox_location_caliper_roi_h">
+             <property name="minimum">
+              <number>5</number>
+             </property>
+             <property name="maximum">
+              <number>1000</number>
+             </property>
+             <property name="value">
+              <number>100</number>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QSpinBox" name="spinBox_location_caliper_roi_count">
+             <property name="minimum">
+              <number>5</number>
+             </property>
+             <property name="maximum">
+              <number>200</number>
+             </property>
+             <property name="value">
+              <number>10</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="7" column="0">
+         <widget class="QLabel" name="label_13">
+          <property name="text">
+           <string>输入通道</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="1" colspan="3">
+         <widget class="QPushButton" name="pushButton_add_ignore_roi">
+          <property name="text">
+           <string>添加屏蔽roi</string>
+          </property>
+         </widget>
+        </item>
+        <item row="15" column="3" colspan="2">
+         <widget class="QComboBox" name="comboBox_img_process_type">
+          <item>
+           <property name="text">
+            <string>无</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>平滑处理</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="16" column="0">
+         <widget class="QGroupBox" name="groupBox_9">
+          <property name="title">
+           <string>检测卡尺2</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_13">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_61">
+             <property name="text">
+              <string>找边极性</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="comboBox_caliper2_transition">
+             <item>
+              <property name="text">
+               <string>所有</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>黑到白</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>白到黑</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_62">
+             <property name="text">
+              <string>找边模式</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QComboBox" name="comboBox_caliper2_select">
+             <item>
+              <property name="text">
+               <string>所有</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>第一边</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>最后一边</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_63">
+             <property name="text">
+              <string>阈值</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QSpinBox" name="spinBox_caliper2_thre">
+             <property name="minimum">
+              <number>5</number>
+             </property>
+             <property name="maximum">
+              <number>60</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="24" column="0">
+         <widget class="QLabel" name="label_40">
+          <property name="text">
+           <string>启用去重</string>
+          </property>
+         </widget>
+        </item>
+        <item row="18" column="3" colspan="2">
+         <widget class="QSpinBox" name="spinBox_limited_area_min">
           <property name="minimum">
            <number>1</number>
           </property>
           <property name="maximum">
-           <number>255</number>
-          </property>
-          <property name="value">
-           <number>160</number>
-          </property>
-         </widget>
-        </item>
-        <item row="16" column="1" colspan="2">
-         <widget class="QLabel" name="label_11">
-          <property name="text">
-           <string>预处理核大小</string>
+           <number>999999</number>
           </property>
          </widget>
         </item>
@@ -848,20 +948,208 @@
           </layout>
          </widget>
         </item>
-        <item row="12" column="3" colspan="2">
-         <widget class="QDoubleSpinBox" name="doubleSpinBox_object_detect_thre">
-          <property name="minimum">
-           <double>0.250000000000000</double>
-          </property>
-          <property name="maximum">
-           <double>1.000000000000000</double>
+        <item row="19" column="0">
+         <widget class="QLabel" name="label_66">
+          <property name="text">
+           <string>距离1阈值</string>
           </property>
          </widget>
         </item>
-        <item row="15" column="1" colspan="2">
-         <widget class="QLabel" name="label_12">
+        <item row="14" column="1" colspan="2">
+         <widget class="QLabel" name="label_4">
           <property name="text">
-           <string>图像预处理算法</string>
+           <string>油污面积阈值</string>
+          </property>
+         </widget>
+        </item>
+        <item row="22" column="4">
+         <widget class="QLabel" name="label_39">
+          <property name="text">
+           <string>输出结果格式</string>
+          </property>
+         </widget>
+        </item>
+        <item row="22" column="3">
+         <widget class="QComboBox" name="comboBox_resultType">
+          <item>
+           <property name="text">
+            <string>定位像素坐标</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>定位机械臂坐标</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>定位相对坐标</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="11" column="0">
+         <widget class="QSpinBox" name="spinBox_centerLineD">
+          <property name="minimum">
+           <number>0</number>
+          </property>
+          <property name="maximum">
+           <number>2500</number>
+          </property>
+         </widget>
+        </item>
+        <item row="16" column="1" colspan="2">
+         <widget class="QLabel" name="label_11">
+          <property name="text">
+           <string>预处理核大小</string>
+          </property>
+         </widget>
+        </item>
+        <item row="18" column="1" colspan="2">
+         <widget class="QLabel" name="label_7">
+          <property name="text">
+           <string>斑点最小面积</string>
+          </property>
+         </widget>
+        </item>
+        <item row="22" column="1" colspan="2">
+         <widget class="QPushButton" name="pushButton_del_roi">
+          <property name="text">
+           <string>删除检测roi</string>
+          </property>
+         </widget>
+        </item>
+        <item row="20" column="3" colspan="2">
+         <widget class="QSpinBox" name="spinBox_limited_area_max">
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>999999</number>
+          </property>
+          <property name="singleStep">
+           <number>1</number>
+          </property>
+          <property name="value">
+           <number>100</number>
+          </property>
+         </widget>
+        </item>
+        <item row="14" column="0">
+         <widget class="QGroupBox" name="groupBox_5">
+          <property name="title">
+           <string>定位卡尺4</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_9">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_50">
+             <property name="text">
+              <string>找边极性</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="comboBox_location_caliper4_transition">
+             <item>
+              <property name="text">
+               <string>所有</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>黑到白</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>白到黑</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_52">
+             <property name="text">
+              <string>找边模式</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QComboBox" name="comboBox_location_caliper4_select">
+             <item>
+              <property name="text">
+               <string>所有</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>第一边</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>最后一边</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_54">
+             <property name="text">
+              <string>阈值</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QSpinBox" name="spinBox_location_caliper4_thre">
+             <property name="minimum">
+              <number>5</number>
+             </property>
+             <property name="maximum">
+              <number>60</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="10" column="0">
+         <widget class="QLabel" name="label_71">
+          <property name="text">
+           <string>中心线间距</string>
+          </property>
+         </widget>
+        </item>
+        <item row="26" column="4">
+         <widget class="QLabel" name="label_75">
+          <property name="text">
+           <string>尺寸最小限制范围：</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="QSpinBox" name="spinBox_thre_location">
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>255</number>
+          </property>
+          <property name="value">
+           <number>160</number>
+          </property>
+         </widget>
+        </item>
+        <item row="26" column="0">
+         <widget class="QDoubleSpinBox" name="doubleSpinBox_distance_thre_min">
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>99999.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.000000000000000</double>
           </property>
          </widget>
         </item>
@@ -962,10 +1250,10 @@
           </layout>
          </widget>
         </item>
-        <item row="24" column="0">
-         <widget class="QLabel" name="label_40">
+        <item row="15" column="1" colspan="2">
+         <widget class="QLabel" name="label_12">
           <property name="text">
-           <string>启用去重</string>
+           <string>图像预处理算法</string>
           </property>
          </widget>
         </item>
@@ -976,13 +1264,10 @@
           </property>
          </widget>
         </item>
-        <item row="18" column="3" colspan="2">
-         <widget class="QSpinBox" name="spinBox_limited_area_min">
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <number>999999</number>
+        <item row="27" column="0">
+         <widget class="QLabel" name="label_33">
+          <property name="text">
+           <string>角度补偿值</string>
           </property>
          </widget>
         </item>
@@ -1010,20 +1295,6 @@
           </item>
          </widget>
         </item>
-        <item row="8" column="1" colspan="3">
-         <widget class="QPushButton" name="pushButton_add_ignore_roi">
-          <property name="text">
-           <string>添加屏蔽roi</string>
-          </property>
-         </widget>
-        </item>
-        <item row="12" column="1" colspan="2">
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>置信度阈值</string>
-          </property>
-         </widget>
-        </item>
         <item row="21" column="3">
          <widget class="QLabel" name="label_67">
           <property name="text">
@@ -1031,63 +1302,14 @@
           </property>
          </widget>
         </item>
-        <item row="11" column="0">
-         <widget class="QSpinBox" name="spinBox_centerLineD">
+        <item row="21" column="0">
+         <widget class="QSpinBox" name="spinBox_caliper_distance2_limit">
           <property name="minimum">
-           <number>0</number>
+           <number>5</number>
           </property>
           <property name="maximum">
-           <number>2500</number>
+           <number>99999</number>
           </property>
-         </widget>
-        </item>
-        <item row="20" column="3" colspan="2">
-         <widget class="QSpinBox" name="spinBox_limited_area_max">
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <number>999999</number>
-          </property>
-          <property name="singleStep">
-           <number>1</number>
-          </property>
-          <property name="value">
-           <number>100</number>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="0">
-         <widget class="QGroupBox" name="groupBox_ignore_pts">
-          <property name="title">
-           <string>屏蔽参数</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_5">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_14">
-             <property name="text">
-              <string>屏蔽区</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QComboBox" name="comboBox_ignore_roi"/>
-           </item>
-           <item row="1" column="0">
-            <widget class="QPushButton" name="pushButton_set_ignore_roi">
-             <property name="text">
-              <string>重绘屏蔽roi</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QPushButton" name="pushButton_del_ignore_roi">
-             <property name="text">
-              <string>删除屏蔽roi</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
          </widget>
         </item>
         <item row="4" column="3">
@@ -1188,15 +1410,116 @@
           </layout>
          </widget>
         </item>
-        <item row="18" column="1" colspan="2">
-         <widget class="QLabel" name="label_7">
-          <property name="text">
-           <string>斑点最小面积</string>
+        <item row="27" column="4">
+         <widget class="QDoubleSpinBox" name="doubleSpinBox_distance_thre_max">
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>99999.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>99999.000000000000000</double>
           </property>
          </widget>
         </item>
-        <item row="11" column="3" colspan="2">
-         <widget class="QComboBox" name="comboBox_roi"/>
+        <item row="20" column="0">
+         <widget class="QSpinBox" name="spinBox_caliper_distance1_limit">
+          <property name="minimum">
+           <number>5</number>
+          </property>
+          <property name="maximum">
+           <number>99999</number>
+          </property>
+         </widget>
+        </item>
+        <item row="17" column="1" colspan="2">
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>斑点检测阈值</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="3">
+         <widget class="QGroupBox" name="groupBox_caliper_location2">
+          <property name="title">
+           <string>定位卡尺2</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_6">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_48">
+             <property name="text">
+              <string>找边极性</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="comboBox_location_caliper2_transition">
+             <item>
+              <property name="text">
+               <string>黑到白</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>白到黑</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_46">
+             <property name="text">
+              <string>找边模式</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QComboBox" name="comboBox_location_caliper2_select">
+             <item>
+              <property name="text">
+               <string>第一边</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>最后一边</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_47">
+             <property name="text">
+              <string>阈值</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QSpinBox" name="spinBox_location_caliper2_thre">
+             <property name="minimum">
+              <number>5</number>
+             </property>
+             <property name="maximum">
+              <number>60</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="17" column="3" colspan="2">
+         <widget class="QSpinBox" name="spinBox_thre_blob">
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>255</number>
+          </property>
+          <property name="value">
+           <number>10</number>
+          </property>
+         </widget>
         </item>
         <item row="15" column="0">
          <widget class="QGroupBox" name="groupBox_10">
@@ -1274,156 +1597,6 @@
             </widget>
            </item>
           </layout>
-         </widget>
-        </item>
-        <item row="15" column="3" colspan="2">
-         <widget class="QComboBox" name="comboBox_img_process_type">
-          <item>
-           <property name="text">
-            <string>无</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>平滑处理</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item row="6" column="0">
-         <widget class="QLabel" name="label_9">
-          <property name="text">
-           <string>定位二值化阈值</string>
-          </property>
-         </widget>
-        </item>
-        <item row="25" column="1">
-         <widget class="QDoubleSpinBox" name="doubleSpinBox_r_robot_b">
-          <property name="decimals">
-           <number>5</number>
-          </property>
-          <property name="minimum">
-           <double>-999999.000000000000000</double>
-          </property>
-          <property name="maximum">
-           <double>999999.000000000000000</double>
-          </property>
-          <property name="singleStep">
-           <double>0.010000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="13" column="0">
-         <widget class="QGroupBox" name="groupBox_4">
-          <property name="title">
-           <string>定位卡尺3</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_8">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_49">
-             <property name="text">
-              <string>找边极性</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QComboBox" name="comboBox_location_caliper3_transition">
-             <item>
-              <property name="text">
-               <string>所有</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>黑到白</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>白到黑</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_51">
-             <property name="text">
-              <string>找边模式</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QComboBox" name="comboBox_location_caliper3_select">
-             <item>
-              <property name="text">
-               <string>所有</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>第一边</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>最后一边</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_53">
-             <property name="text">
-              <string>阈值</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QSpinBox" name="spinBox_location_caliper3_thre">
-             <property name="minimum">
-              <number>5</number>
-             </property>
-             <property name="maximum">
-              <number>60</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="25" column="0">
-         <widget class="QLabel" name="label_33">
-          <property name="text">
-           <string>角度补偿值</string>
-          </property>
-         </widget>
-        </item>
-        <item row="22" column="1" colspan="2">
-         <widget class="QPushButton" name="pushButton_del_roi">
-          <property name="text">
-           <string>删除检测roi</string>
-          </property>
-         </widget>
-        </item>
-        <item row="14" column="3" colspan="2">
-         <widget class="QSpinBox" name="spinBox_greasy_dirt_area_thre">
-          <property name="maximum">
-           <number>999999</number>
-          </property>
-         </widget>
-        </item>
-        <item row="19" column="0">
-         <widget class="QLabel" name="label_66">
-          <property name="text">
-           <string>距离1阈值</string>
-          </property>
-         </widget>
-        </item>
-        <item row="14" column="1" colspan="2">
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>油污面积阈值</string>
-          </property>
          </widget>
         </item>
         <item row="18" column="0">
@@ -1504,191 +1677,18 @@
           </layout>
          </widget>
         </item>
-        <item row="11" column="1" colspan="2">
-         <widget class="QLabel" name="label_10">
+        <item row="24" column="1">
+         <widget class="QCheckBox" name="checkBox_is_remove_duplicates_result">
           <property name="text">
-           <string>检测区</string>
+           <string/>
           </property>
          </widget>
         </item>
-        <item row="8" column="0">
-         <widget class="QPushButton" name="pushButton_add_roi">
+        <item row="25" column="0">
+         <widget class="QLabel" name="label_76">
           <property name="text">
-           <string>添加检测roi</string>
+           <string>尺寸最大限制范围：</string>
           </property>
-         </widget>
-        </item>
-        <item row="13" column="1" colspan="2">
-         <widget class="QLabel" name="label_3">
-          <property name="text">
-           <string>黑斑面积阈值</string>
-          </property>
-         </widget>
-        </item>
-        <item row="16" column="3" colspan="2">
-         <widget class="QSpinBox" name="spinBox_img_process_kernal_size">
-          <property name="minimum">
-           <number>3</number>
-          </property>
-          <property name="maximum">
-           <number>31</number>
-          </property>
-          <property name="singleStep">
-           <number>2</number>
-          </property>
-         </widget>
-        </item>
-        <item row="21" column="0">
-         <widget class="QSpinBox" name="spinBox_caliper_distance2_limit">
-          <property name="minimum">
-           <number>5</number>
-          </property>
-          <property name="maximum">
-           <number>99999</number>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="4">
-         <widget class="QPushButton" name="pushButton_show_img">
-          <property name="text">
-           <string>显示原图</string>
-          </property>
-         </widget>
-        </item>
-        <item row="13" column="3" colspan="2">
-         <widget class="QSpinBox" name="spinBox_black_spot_area_thre">
-          <property name="maximum">
-           <number>9999999</number>
-          </property>
-         </widget>
-        </item>
-        <item row="16" column="0">
-         <widget class="QGroupBox" name="groupBox_9">
-          <property name="title">
-           <string>检测卡尺2</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_13">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_61">
-             <property name="text">
-              <string>找边极性</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QComboBox" name="comboBox_caliper2_transition">
-             <item>
-              <property name="text">
-               <string>所有</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>黑到白</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>白到黑</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_62">
-             <property name="text">
-              <string>找边模式</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QComboBox" name="comboBox_caliper2_select">
-             <item>
-              <property name="text">
-               <string>所有</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>第一边</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>最后一边</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_63">
-             <property name="text">
-              <string>阈值</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QSpinBox" name="spinBox_caliper2_thre">
-             <property name="minimum">
-              <number>5</number>
-             </property>
-             <property name="maximum">
-              <number>60</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="10" column="0">
-         <widget class="QLabel" name="label_71">
-          <property name="text">
-           <string>中心线间距</string>
-          </property>
-         </widget>
-        </item>
-        <item row="10" column="1">
-         <widget class="QComboBox" name="comboBox_type">
-          <item>
-           <property name="text">
-            <string>运行模式</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>训练模式</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item row="10" column="2">
-         <widget class="QLabel" name="label_5">
-          <property name="text">
-           <string>模式</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QGroupBox" name="groupBox_train">
-          <property name="title">
-           <string>训练参数</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_4" columnstretch="0,0">
-           <item row="0" column="1">
-            <widget class="QPushButton" name="pushButton_train">
-             <property name="text">
-              <string>训练</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QPushButton" name="pushButton_set_train_image">
-             <property name="text">
-              <string>设置当前图片为训练图片</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
          </widget>
         </item>
        </layout>

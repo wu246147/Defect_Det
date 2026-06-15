@@ -394,6 +394,10 @@ MainWindow::MainWindow(QWidget *parent)
     //读取通讯信息
     readCommunicationPara();
     LOGE_HIGH("MainWindow finish readCommunicationPara")
+
+    readIOPara();
+    LOGE_HIGH("MainWindow finish readIOPara")
+
     //读取xml文件
     bool xml_rt = read_config();
     if(!xml_rt)
@@ -461,22 +465,27 @@ MainWindow::MainWindow(QWidget *parent)
     bool cam_rt = jobmanager.mvs_open_device();
     LOGE_HIGH("MainWindow finish cam init")
 
-    //plc通讯
-    plcSiemens = new PLC_Siemens(plcIPAddress, DB_No, 50);
-    plcSiemens->m_exitThread = true;
-    plcSiemens->start();
+    // //plc通讯
+    // plcSiemens = new PLC_Siemens(plcIPAddress, DB_No, 50);
+    // plcSiemens->m_exitThread = true;
+    // plcSiemens->start();
 
-    //tcp通讯初始化
-    communication.tcp_server_init();
-    LOGE_HIGH("MainWindow finish tcp init")
-    //机器人通讯
-    std::string msg;
-    LOGE_HIGH("communicationModbus.plc_ip:%s", communicationModbus.plc_ip.data());
-    LOGE_HIGH("communicationModbus.net_port:%d", communicationModbus.net_port);
+    // //tcp通讯初始化
+    // communication.tcp_server_init();
+    // LOGE_HIGH("MainWindow finish tcp init")
+    // //机器人通讯
+    // std::string msg;
+    // LOGE_HIGH("communicationModbus.plc_ip:%s", communicationModbus.plc_ip.data());
+    // LOGE_HIGH("communicationModbus.net_port:%d", communicationModbus.net_port);
 
-    communicationModbus.modbusConnect(communicationModbus.plc_ip, communicationModbus.net_port, msg);
+    // communicationModbus.modbusConnect(communicationModbus.plc_ip, communicationModbus.net_port, msg);
 
-    LOGE_HIGH("msg:%s", msg.data());
+    // LOGE_HIGH("msg:%s", msg.data());
+
+    //丰田plc初始化
+    plcToyopuc = new ToyopucCaller();
+    plcToyopuc->connectToPLC(plcIPAddress, port);
+
 
 
     LOGE_HIGH("communicationCOM.PortName:%s", communicationCOM.port_name.data());
@@ -494,33 +503,20 @@ MainWindow::MainWindow(QWidget *parent)
     }
     //显示作业名
     show_jobname();
-    // //end
-    // for(int id = 0; id < 100; ++id)
-    // {
-    //     ui->tableWidget->insertRow(0);//在最后插入一行
-    //     ui->tableWidget->setItem(0, 0, new QTableWidgetItem(QString(std::to_string(id + 0.01).data()))); //设置单元格内容
-    //     ui->tableWidget->setItem(0, 1, new QTableWidgetItem(QString(std::to_string(id + 0.01).data()))); //设置单元格内容
-    //     ui->tableWidget->setItem(0, 2, new QTableWidgetItem(QString(std::to_string(id + 0.01).data()))); //设置单元格内容
-    // }
-    //隐藏界面
     changeShowMode();
     LOGE_HIGH("MainWindow finish init")
-
-    // ui->action_calibration->setVisible(false);
-
 
     //心跳，用于给plc发送一些状态
     isRunning = true;
     runFut = QtConcurrent::run(this, &MainWindow::runThread);
     LOGE("run thread start");
 
-    //plc 信号线程启动
+    // plc 信号线程启动
+    // 创建plc监听线程
     plcInfoTime = new QTimer(this);
     connect(plcInfoTime, &QTimer::timeout, this, &MainWindow::plcInfoUpdateEven);
 
-    //太频繁的话，会导致遍历好几遍
-    // plcInfoTime->setInterval(200);
-    plcInfoTime->setInterval(1000);
+    plcInfoTime->setInterval(200);
     plcInfoTime->start();
 
     //默认开启保存图片
@@ -546,34 +542,21 @@ void MainWindow::runThread()
         {
             //等待机器人触发信号
             QThread::msleep(100);
-            // jaka机器人通讯
-            // QMetaObject::invokeMethod(this, "robotGrab",  Qt::QueuedConnection);
-
             QDateTime currentDateTime = QDateTime::currentDateTime();
-
-            //plc通讯
-            if(plcSiemens != nullptr && plcSiemens->MyS7Client->Connected())
+            if(plcToyopuc != nullptr && plcToyopuc->isConnected())
             {
                 //心跳
-                int offset, val;   //心跳结果输出位置为11
-                offset = (int)plc_offset::heardBeat;
                 if(currentDateTime.time().second() % 2 == 0)
                 {
-                    val = 1;
-                    plcSiemens->WriteValue(plcSiemens->eByte, DB_No, offset, &val);
-                    // LOGE("WriteVal finish");
-
+                    plcToyopuc->writeInt(IOPara["heardBeat"], 1);
                 }
                 else
                 {
-                    val = 0;
-                    plcSiemens->WriteValue(plcSiemens->eByte, DB_No, offset, &val);
-                    // LOGE("WriteVal finish");
+                    plcToyopuc->writeInt(IOPara["heardBeat"], 0);
                 }
 
-
                 //准备好
-                offset = (int)plc_offset::readly;
+                int val = 0;
                 if(isRealy)
                 {
                     val = 1;
@@ -582,11 +565,9 @@ void MainWindow::runThread()
                 {
                     val = 0;
                 }
-                plcSiemens->WriteValue(plcSiemens->eByte, DB_No, offset, &val);
+                plcToyopuc->writeInt(IOPara["getReady"], val);
 
-
-                //车型
-                offset = (int)plc_offset::carNOOutput;
+                //车型反馈
                 val = 0;
                 try
                 {
@@ -596,12 +577,8 @@ void MainWindow::runThread()
                 {
                     LOGE("error:job_name is not int");
                 }
-
-                plcSiemens->WriteValue(plcSiemens->eByte, DB_No, offset, &val);
-
-
+                plcToyopuc->writeInt(IOPara["vehicleModelFeedback"], val);
             }
-
         }
         catch(cv::Exception &e)
         {
@@ -628,12 +605,9 @@ void MainWindow::plcInfoUpdateEven()
 {
     try
     {
-        if(plcSiemens != nullptr && plcSiemens->MyS7Client->Connected())
+        if(plcToyopuc != nullptr && plcToyopuc->isConnected())
         {
             //显示plc连接状态
-            // QString styleSheetPushButton = QString("QPushButton{background-color: rgb(13, 232, 16);border-radius:10px;}");
-            // ui->pushButton_plc_connect_state->setStyleSheet(styleSheetPushButton);
-
             QMetaObject::invokeMethod(ui->pushButton_plc_connect_state, [pushButton = ui->pushButton_plc_connect_state]()
             {
                 QString styleSheetPushButton = QString("QPushButton{background-color: rgb(13, 232, 16);border-radius:10px;}");
@@ -643,87 +617,73 @@ void MainWindow::plcInfoUpdateEven()
 
             ///作业切换信号
             //判断是否要切换
-            int changeJobStartID = plc_offset::carNOInput;
-            int changeJobID = plc_offset::changeJob;
-
             bool isChangeFile = false;
             int currentJobFileID = -1;
             int changeJobFileID = -1;
             int isChangeJob = 0;
-            isChangeJob = plcSiemens->DB_Buffer[changeJobID];
+
+            plcToyopuc->readInt(IOPara["vehicleModeChange"], isChangeJob);
             if(isChangeJob == 1)
             {
                 //复位信号
                 int val;
                 val = 0;
-                plcSiemens->WriteValue(plcSiemens->eByte, DB_No, changeJobID, &val);
-
+                plcToyopuc->writeInt(IOPara["vehicleModeChange"], val);
                 try
                 {
                     currentJobFileID = job_name.toInt();
-                    if(currentJobFileID != plcSiemens->DB_Buffer[changeJobStartID])
+
+                    plcToyopuc->readInt(IOPara["vehicleMode"], changeJobFileID);
+
+                    if(currentJobFileID != changeJobFileID)
                     {
-                        changeJobFileID = plcSiemens->DB_Buffer[changeJobStartID];
                         isChangeFile = true;
                     }
                 }
                 catch(...)
                 {
-
                     LOGE("error:job_name is not int");
                 }
             }
-
             //执行切换
-
             if(isChangeFile)
             {
-
                 QString job_path = QString(job_root_path + "/" + std::to_string(changeJobFileID).data() + ".data");
-
                 if(!QFile(job_path).exists())
                 {
-
                     QMetaObject::invokeMethod(this, [stringInfo = std::to_string(changeJobFileID).data(), ui = this]()
                     {
                         QMessageBox::warning(ui, "警告.", "作业还没创建，请先创建作业： " + QString(stringInfo), QMessageBox::StandardButton::Ok);
                     }, Qt::QueuedConnection);
-
                 }
                 else
                 {
                     changeFileSignal(std::to_string(changeJobFileID));
                 }
-
             }
 
             ///触发取像
-            int checkCam = plc_offset::camCheck;
-            int checkWorkID = plc_offset::workerID;
-            if(plcSiemens->DB_Buffer[checkCam] == 1)
+            int val = 0;
+            plcToyopuc->readInt(IOPara["check"], val);
+            if(val == 1)
             {
                 //复位信号
-                int val;
                 val = 0;
-                plcSiemens->WriteValue(plcSiemens->eByte, DB_No, checkCam, &val);
+                plcToyopuc->writeInt(IOPara["check"], val);
                 //拍照
-                checkCamSignal(0, plcSiemens->DB_Buffer[checkWorkID] - 1);
+                checkCamSignal(0, 0);
             }
-
 
 
         }
         else
         {
             //显示plc连接状态
-            // QString styleSheetPushButton = QString("QPushButton{background-color: #bd3124;border-radius:10px;}");
-            // ui->pushButton_plc_connect_state->setStyleSheet(styleSheetPushButton);
             QMetaObject::invokeMethod(ui->pushButton_plc_connect_state, [pushButton = ui->pushButton_plc_connect_state]()
             {
                 QString styleSheetPushButton = QString("QPushButton{background-color: #bd3124;border-radius:10px;}");
                 pushButton->setStyleSheet(styleSheetPushButton);
             }, Qt::QueuedConnection);
-
         }
 
     }
@@ -746,82 +706,82 @@ void MainWindow::plcInfoUpdateEven()
 
 void MainWindow::robotGrab()
 {
-    //这个只是用来做一下demo，实际应用不合适，因为把操作和等待都放到主线程进行了。
-    std::string msg;
-    bool rt;
+    // //这个只是用来做一下demo，实际应用不合适，因为把操作和等待都放到主线程进行了。
+    // std::string msg;
+    // bool rt;
 
-    if(isProcessingModbus)
-    {
-        return;
-    }
-    //读取取像信号
-    int value = -1;
-    rt  = communicationModbus.readInt(1, 28, QModbusDataUnit::DiscreteInputs, value, msg);
-    // LOGE("msg: %s", msg.data());
-    // LOGE("value: %d", value);
+    // if(isProcessingModbus)
+    // {
+    //     return;
+    // }
+    // //读取取像信号
+    // int value = -1;
+    // rt  = communicationModbus.readInt(1, 28, QModbusDataUnit::DiscreteInputs, value, msg);
+    // // LOGE("msg: %s", msg.data());
+    // // LOGE("value: %d", value);
 
-    if(value != 1)
-    {
-        return;
-    }
+    // if(value != 1)
+    // {
+    //     return;
+    // }
 
-    isProcessingModbus = true;
+    // isProcessingModbus = true;
 
-    LOGE("reserve grab")
+    // LOGE("reserve grab")
 
-    //读取取像相机号
+    // //读取取像相机号
 
-    int workerID = -1;
-    rt  = communicationModbus.readInt(1, 29, QModbusDataUnit::DiscreteInputs, workerID, msg);
-    LOGE("msg：%s", msg.data());
+    // int workerID = -1;
+    // rt  = communicationModbus.readInt(1, 29, QModbusDataUnit::DiscreteInputs, workerID, msg);
+    // LOGE("msg：%s", msg.data());
 
 
 
-    LOGE("workerID: %d", workerID)
+    // LOGE("workerID: %d", workerID)
 
-    //取像
-    jobmanager.checkCam(0, workerID);
+    // //取像
+    // jobmanager.checkCam(0, workerID);
 
-    LOGE("finish checkCam")
+    // LOGE("finish checkCam")
 
-    QThread::msleep(100);
-    //发送取像完成信号
-    rt  = communicationModbus.writeInt(1, 51, QModbusDataUnit::Coils, 1, msg);
-    LOGE("msg：%s", msg.data());
+    // QThread::msleep(100);
+    // //发送取像完成信号
+    // rt  = communicationModbus.writeInt(1, 51, QModbusDataUnit::Coils, 1, msg);
+    // LOGE("msg：%s", msg.data());
 
-    LOGE("send finish checkCam")
+    // LOGE("send finish checkCam")
 
-    //等待取像信号结束
-    int wait_count = 30;
-    int cumulative_count = 0;
-    while(1)
-    {
-        int value = -1;
-        rt  = communicationModbus.readInt(1, 28, QModbusDataUnit::DiscreteInputs, value, msg);
+    // //等待取像信号结束
+    // int wait_count = 30;
+    // int cumulative_count = 0;
+    // while(1)
+    // {
+    //     int value = -1;
+    //     rt  = communicationModbus.readInt(1, 28, QModbusDataUnit::DiscreteInputs, value, msg);
 
-        if(value == 0)
-        {
-            break;
-        }
-        QThread::msleep(100);
-        cumulative_count += 1;
-        if(cumulative_count >= wait_count)
-        {
-            // std::cout << "没有收到取像结束信号" << std::endl;
-            LOGE("not reserve cam end finish signal");
-            break;
-        }
-    }
+    //     if(value == 0)
+    //     {
+    //         break;
+    //     }
+    //     QThread::msleep(100);
+    //     cumulative_count += 1;
+    //     if(cumulative_count >= wait_count)
+    //     {
+    //         // std::cout << "没有收到取像结束信号" << std::endl;
+    //         LOGE("not reserve cam end finish signal");
+    //         break;
+    //     }
+    // }
 
-    LOGE("get finish grab")
+    // LOGE("get finish grab")
 
-    //关闭取像完成信号
-    rt  = communicationModbus.writeInt(1, 51, QModbusDataUnit::Coils, 0, msg);
-    LOGE("msg：%s", msg.data());
+    // //关闭取像完成信号
+    // rt  = communicationModbus.writeInt(1, 51, QModbusDataUnit::Coils, 0, msg);
+    // LOGE("msg：%s", msg.data());
 
-    LOGE("send end finish checkCam")
+    // LOGE("send end finish checkCam")
 
-    isProcessingModbus = false;
+    // isProcessingModbus = false;
 }
 
 
@@ -1154,6 +1114,8 @@ bool MainWindow::readCommunicationPara()
     QDomElement bookElement4 = bookNodeList.at(3).toElement();
     plcIPAddress = bookElement4.attribute("plc_ip", "");
     DB_No = bookElement4.attribute("DB_No", "").toInt();
+    port = bookElement4.attribute("port", "").toInt();
+
     LOGE_HIGH("plcIPAddress:%s", plcIPAddress.toStdString().data());
     LOGE_HIGH("DB_No:%d", DB_No);
 
@@ -1195,6 +1157,8 @@ bool MainWindow::writeCommunicationPara()
     QDomElement job_element4 = doc.createElement("communticationPLC_config"); //一级子元素
     job_element4.setAttribute("plc_ip", plcIPAddress); //方式一：创建属性  其中键值对的值可以是各种类型
     job_element4.setAttribute("DB_No", DB_No);//方式一：创建属性  其中键值对的值可以是各种类型
+    job_element4.setAttribute("port", port);//方式一：创建属性  其中键值对的值可以是各种类型
+
     root.appendChild(job_element4);
 
     QTextStream out_stream(&file); //输出到文件
@@ -1202,6 +1166,89 @@ bool MainWindow::writeCommunicationPara()
     file.close();
     return rt;
 }
+
+
+bool MainWindow::readIOPara()
+{
+    bool rt = true;
+    QString file_path = QString(QDir::currentPath() + "/IOPara.xml");
+    QFile file(file_path);
+    if(!file.exists())
+    {
+        LOGE_HIGH("Could not exist IOPara")
+
+        rt = false;
+        return rt;
+    }
+    if(!file.open(QFile::ReadOnly))
+    {
+        LOGE_HIGH("Could not open IOPara")
+
+        rt = false;
+        return rt;
+    }
+    QDomDocument doc;
+    if(!doc.setContent(&file))
+    {
+        LOGE_HIGH("Could not open IOPara")
+
+        file.close();
+        rt = false;
+        return rt;
+    }
+    file.close();
+    QDomElement bookStoreElement = doc.documentElement(); //返回根元素
+    QDomNodeList bookNodeList = bookStoreElement.childNodes();
+    //读取文件名
+    QDomElement bookElement = bookNodeList.at(0).toElement();
+    IOPara["heardBeat"] = bookElement.attribute("heardBeat", "").toInt();
+    IOPara["vehicleModelFeedback"] = bookElement.attribute("vehicleModelFeedback", "").toInt();
+    IOPara["getReady"] = bookElement.attribute("getReady", "").toInt();
+    IOPara["detFinish"] = bookElement.attribute("detFinish", "").toInt();
+    IOPara["detResult"] = bookElement.attribute("detResult", "").toInt();
+    IOPara["check"] = bookElement.attribute("check", "").toInt();
+    IOPara["vehicleMode"] = bookElement.attribute("vehicleMode", "").toInt();
+    IOPara["vehicleModeChange"] = bookElement.attribute("vehicleModeChange", "").toInt();
+
+
+    return rt;
+}
+
+bool MainWindow::writeIOPara()
+{
+    bool rt = true;
+    QString file_path = QString(QDir::currentPath() + "/IOPara.xml");
+    QFile file(file_path); //相对路径、绝对路径、资源路径都可以
+    if(!file.open(QFile::WriteOnly | QFile::Truncate))    //可以用QIODevice，Truncate表示清空原来的内容
+    {
+        rt = false;
+        return rt;
+    }
+    QDomDocument doc;
+    QDomProcessingInstruction instruction; //添加xml说明
+    instruction = doc.createProcessingInstruction("xml", "version=\"1.0\" encoding=\"UTF-8\"");
+    doc.appendChild(instruction);
+    QDomElement root = doc.createElement("IO_config"); //创建根元素
+    doc.appendChild(root); //添加根元素
+    QDomElement job_element = doc.createElement("Para"); //一级子元素
+    job_element.setAttribute("heardBeat", IOPara["heardBeat"]); //方式一：创建属性  其中键值对的值可以是各种类型
+    job_element.setAttribute("vehicleModelFeedback", IOPara["vehicleModelFeedback"]); //方式一：创建属性  其中键值对的值可以是各种类型
+    job_element.setAttribute("getReady", IOPara["getReady"]); //方式一：创建属性  其中键值对的值可以是各种类型
+    job_element.setAttribute("detFinish", IOPara["detFinish"]); //方式一：创建属性  其中键值对的值可以是各种类型
+    job_element.setAttribute("detResult", IOPara["detResult"]); //方式一：创建属性  其中键值对的值可以是各种类型
+    job_element.setAttribute("check", IOPara["check"]); //方式一：创建属性  其中键值对的值可以是各种类型
+    job_element.setAttribute("vehicleMode", IOPara["vehicleMode"]); //方式一：创建属性  其中键值对的值可以是各种类型
+    job_element.setAttribute("vehicleModeChange", IOPara["vehicleModeChange"]); //方式一：创建属性  其中键值对的值可以是各种类型
+    root.appendChild(job_element);
+
+
+    QTextStream out_stream(&file); //输出到文件
+    doc.save(out_stream, 2); //缩进4格
+    file.close();
+    return rt;
+}
+
+
 
 bool MainWindow::read_config()
 {
@@ -1521,7 +1568,7 @@ void MainWindow::remove_update_display_img_event()
 void MainWindow::regRobotEvent()
 {
     removeRobotEvent();
-    connect(&communication, &Communication::checkCamSignal, this, &MainWindow::changeFileAndCheckCam);
+    // connect(&communication, &Communication::checkCamSignal, this, &MainWindow::changeFileAndCheckCam);
     // connect(&communication, &Communication::focusingSignal, &jobmanager, &JobManager::focusingCam);
     // connect(&communication, &Communication::calibrationSignal, &jobmanager, &JobManager::calibrationCam);
     //仿真测试
@@ -1531,7 +1578,7 @@ void MainWindow::regRobotEvent()
 
 void MainWindow::removeRobotEvent()
 {
-    disconnect(&communication, &Communication::checkCamSignal, this, &MainWindow::changeFileAndCheckCam);
+    // disconnect(&communication, &Communication::checkCamSignal, this, &MainWindow::changeFileAndCheckCam);
     // disconnect(&communication, &Communication::focusingSignal, &jobmanager, &JobManager::focusingCam);
     // disconnect(&communication, &Communication::calibrationSignal, &jobmanager, &JobManager::calibrationCam);
     // disconnect(&communication, &Communication::calibrationSignal, this, &MainWindow::calibrationCamTest);
@@ -1630,7 +1677,7 @@ void MainWindow::addStatisticsData(int cam_id)
     ui->tableWidget->insertRow(0);
     QDateTime currentDateTime = QDateTime::currentDateTime();
     ui->tableWidget->setItem(0, 0, new QTableWidgetItem(currentDateTime.toString("MM-dd hh:mm:ss"))); //设置单元格内容
-    ui->tableWidget->setItem(0, 1, new QTableWidgetItem(to_string_with_precision(jobmanager.dist, 3).data())); //设置单元格内容
+    ui->tableWidget->setItem(0, 1, new QTableWidgetItem(to_string_with_precision(jobmanager.jobworkers[0].defectDetResults.size(), 3).data())); //设置单元格内容
     std::string rt = jobmanager.result() ? "OK" : "NG";
     ui->tableWidget->setItem(0, 2, new QTableWidgetItem(rt.data())); //设置单元格内容
 
@@ -1980,30 +2027,44 @@ void MainWindow::on_actioncam_setting_triggered()
 
 void MainWindow::on_actionoutput_setting_triggered()
 {
-    //关闭socket服务器
-    communication.tcp_server_dispose();
-    //关闭机器人通讯
-    communicationModbus.modbusDisconnect();
+    LOGE("111");
+    // //关闭socket服务器
+    // communication.tcp_server_dispose();
+    // //关闭机器人通讯
+    // communicationModbus.modbusDisconnect();
+    //关闭plc通讯
+    plcToyopuc->disconnect();
+    LOGE("222");
 
     communicationCOM.disconnect();
+    LOGE("333");
+
     //    //打开设置界面
-    DialogOutputSet *dialog = new DialogOutputSet(&jobmanager, &communication, this);
+    DialogOutputSet *dialog = new DialogOutputSet(&jobmanager, &plcIPAddress,
+        &port, &IOPara, this);
     Qt::WindowFlags flags = Qt::Dialog;
     flags |= Qt::WindowMinMaxButtonsHint;
     flags |= Qt::WindowCloseButtonHint;
     dialog->setWindowFlags(flags);
     dialog->setWindowFlag(Qt::WindowStaysOnTopHint, false);
     dialog->exec();
+    LOGE("444");
+
     // 保存通讯参数
     writeCommunicationPara();
-    // tcp通讯初始化
-    communication.tcp_server_init();
+    // 保存通讯参数
+    writeIOPara();
 
-    //机器人通讯
-    std::string msg;
-    communicationModbus.modbusConnect(communicationModbus.plc_ip, communicationModbus.net_port, msg);
+    // // tcp通讯初始化
+    // communication.tcp_server_init();
+
+    // //机器人通讯
+    // std::string msg;
+    // communicationModbus.modbusConnect(communicationModbus.plc_ip, communicationModbus.net_port, msg);
 
     communicationCOM.connect();
+    //连接plc
+    plcToyopuc->connectToPLC(plcIPAddress, port);
 
 }
 
@@ -2041,7 +2102,7 @@ void MainWindow::on_action_simulation_triggered()
                 //                qDebug() << src_image_path.data();
                 cv::Mat src_image;
                 //                qDebug()<<333;
-                src_image = cv::imread(src_image_path, -1);
+                src_image = cv::imread(src_image_path, 1);
                 //                qDebug()<<444;
                 jobmanager.jobworkers[i].img = src_image;
                 //        jobmanager.jobworkers[i].display->cleanItem();
@@ -2097,7 +2158,7 @@ void MainWindow::on_action_next_img_triggered()
             std::string src_image_path = src_image_paths[tmp_src_img_id_list[i]];
             cv::Mat src_image;
             //            qDebug()<<444;
-            src_image = cv::imread(src_image_path, -1);
+            src_image = cv::imread(src_image_path, 1);
             // LOGE("jobmanager->jobworkers[cam_id].rotateType:%d", jobmanager.jobworkers[i].rotateType);
             // if(jobmanager.jobworkers[i].rotateType >= 0)
             // {
@@ -2146,7 +2207,7 @@ void MainWindow::on_action_last_img_triggered()
             }
             std::string src_image_path = src_image_paths[tmp_src_img_id_list[i]];
             cv::Mat src_image;
-            src_image = cv::imread(src_image_path, -1);
+            src_image = cv::imread(src_image_path, 1);
             jobmanager.jobworkers[i].img = src_image;
             //        jobmanager.jobworkers[i].display->cleanItem();
             //        jobmanager.jobworkers[i].display->setImage(MatToPixmap(src_image));
@@ -2275,112 +2336,73 @@ void MainWindow::job_result_output(int work_id)
     {
 
         //界面更新
-        if(work_id == 1)
+        // if(work_id == 1)
+        // {
+        bool rt = jobmanager.result();
+        //仿真不加入队列
+        if(!jobmanager.jobworkers[work_id].isSiming)
         {
-            bool rt = jobmanager.result();
-            //仿真不加入队列
-            if(!jobmanager.jobworkers[work_id].isSiming)
-            {
-                jobmanager.TongJi(rt);
-                update_count_view();
-            }
-            if(rt)
-            {
-                ui->label_result->setStyleSheet("QLabel{color:rgb(0,255,0);font: 700 56pt \"Microsoft YaHei UI\";}");
-                // ui->label_result->setText("OK");
-                ui->label_result->setText(to_string_with_precision(jobmanager.dist, 3).data());
-                QDateTime currentDateTime = QDateTime::currentDateTime();
-                ui->label_time->setText(currentDateTime.toString("yyyy-MM-dd hh:mm:ss"));
-            }
-            else
-            {
-                ui->label_result->setStyleSheet("QLabel{color:rgb(255,0,0);font: 700 56pt \"Microsoft YaHei UI\";}");
-                // ui->label_result->setText("NG");
-                ui->label_result->setText(to_string_with_precision(jobmanager.dist, 3).data());
-                QDateTime currentDateTime = QDateTime::currentDateTime();
-                ui->label_time->setText(currentDateTime.toString("yyyy-MM-dd hh:mm:ss"));
-            }
-
-            //仿真不加入队列
-            if(!jobmanager.jobworkers[work_id].isSiming)
-            {
-                //加入结果队列
-                addStatisticsData(work_id);
-
-            }
-
+            jobmanager.TongJi(rt);
+            update_count_view();
         }
-
-
-        //结果输出
-
-        if(work_id == 0)
+        if(rt)
         {
-            char tmp_info[256];
-            // sprintf(tmp_info, "0,0,0,0,0,0,0,0,0,0,0,0,0,%d,0", jobmanager.result());
-
-            sprintf(tmp_info, "%d,0,0,0,0,0,0,0,0,0,", jobmanager.result());
-            communication.tcp_send(tmp_info);
+            ui->label_result->setStyleSheet("QLabel{color:rgb(0,255,0);font: 700 56pt \"Microsoft YaHei UI\";}");
+            ui->label_result->setText("OK");
+            // ui->label_result->setText(to_string_with_precision(jobmanager.dist, 3).data());
+            QDateTime currentDateTime = QDateTime::currentDateTime();
+            ui->label_time->setText(currentDateTime.toString("yyyy-MM-dd hh:mm:ss"));
         }
         else
         {
-            char tmp_info[256];
-            // sprintf(tmp_info, "0,0,0,0,0,0,0,0,0,0,0,0,%d,%f,", jobmanager.result(), jobmanager.dist);
-            sprintf(tmp_info, "%d,0,0,0,0,0,0,0,0,%f,", jobmanager.result(), jobmanager.dist);
+            ui->label_result->setStyleSheet("QLabel{color:rgb(255,0,0);font: 700 56pt \"Microsoft YaHei UI\";}");
+            ui->label_result->setText("NG");
+            // ui->label_result->setText(to_string_with_precision(jobmanager.dist, 3).data());
+            QDateTime currentDateTime = QDateTime::currentDateTime();
+            ui->label_time->setText(currentDateTime.toString("yyyy-MM-dd hh:mm:ss"));
+        }
 
-            communication.tcp_send(tmp_info);
+        //仿真不加入队列
+        if(!jobmanager.jobworkers[work_id].isSiming)
+        {
+            //加入结果队列
+            addStatisticsData(work_id);
+
+        }
+
+        // //结果输出
 
 
-            //发给plc
+        //发结果给plc
+        {
+            int val;
+            if(jobmanager.result())
             {
-                int offset, val;
-                offset = plc_offset::checkResult;      //工位2结果输出位置为4，这里输到低通道就是5.
-                if(jobmanager.result())
-                {
-                    val = 1;
-                }
-                else
-                {
-                    val = 2;
-                }
-
-
-                LOGE("start Write to DB %d.DBB%d :%d", DB_No, offset, val);
-                if(plcSiemens != nullptr && plcSiemens->MyS7Client->Connected())
-                {
-                    int res = plcSiemens->WriteValue(plcSiemens->eByte, DB_No, offset, &val);
-                    LOGE("WriteInt rt :%d", res);
-
-                }
+                val = 1;
             }
+            else
             {
-                int offset;
-                float val;
-                offset = plc_offset::checkDist;     //工位2结果输出位置为6，这里输到6.
-                val = jobmanager.dist;
-                LOGE("start Write to DB %d.DBB%d :%f", DB_No, offset, val);
-                if(plcSiemens != nullptr && plcSiemens->MyS7Client->Connected())
-                {
-                    int res = plcSiemens->WriteValue(plcSiemens->eReal, DB_No, offset, &val);
+                val = 2;
+            }
+            LOGE("start Write to PLC D%d :%d", IOPara["detResult"], val);
+            if(plcToyopuc != nullptr && plcToyopuc->isConnected())
+            {
+                int res = plcToyopuc->writeInt(IOPara["detResult"], val);
+                LOGE("WriteInt rt :%d", res);
 
-                    LOGE("WriteFloat rt :%d", res);
-
-                }
             }
         }
 
         //取像完成
         //发给plc
         {
-            int offset, val;
-            offset = plc_offset::acqFinish;      //工位2结果输出位置为4，这里输到低通道就是5.
-
+            int val;
             val = 1;
 
-            LOGE("start Write to DB %d.DBB%d :%d", DB_No, offset, val);
-            if(plcSiemens != nullptr && plcSiemens->MyS7Client->Connected())
+            LOGE("start Write to PLC D%d :%d", IOPara["detFinish"], val);
+            if(plcToyopuc != nullptr && plcToyopuc->isConnected())
             {
-                int res = plcSiemens->WriteValue(plcSiemens->eByte, DB_No, offset, &val);
+                int res = plcToyopuc->writeInt(IOPara["detFinish"], val);
                 LOGE("WriteInt rt :%d", res);
 
             }
@@ -2421,11 +2443,11 @@ void MainWindow::jobover_event(int work_id)
         }
         else
         {
-            //如果是第二次拍照，要计算最终距离
-            if(work_id == 1)
-            {
-                jobmanager.getDistance();
-            }
+            // //如果是第二次拍照，要计算最终距离
+            // if(work_id == 1)
+            // {
+            //     jobmanager.getDistance();
+            // }
 
             jobworkers_total_use_time[work_id] = (double)(jobmanager.jobworkers[work_id].jobworker_end_time - jobmanager.jobworkers[work_id].jobworker_start_time) / CLOCKS_PER_SEC;
             QString message = QString(("jobworker" + std::to_string(work_id) + " total use time: " +
@@ -2977,15 +2999,15 @@ void MainWindow::changeFileEven(std::string fileName)
     {
         //如果要切换的就是当前作业，就直接返回完成结果
         //结果发送
-        std::string info = "SWP," + fileName + ",0\r";
-        communication.tcp_send(info);
+        // std::string info = "SWP," + fileName + ",0\r";
+        // communication.tcp_send(info);
         return;
     }
     changeFile(fileName);
     changeDisplay();
-    //结果发送
-    std::string info = "SWP," + fileName + ",0\r";
-    communication.tcp_send(info);
+    // //结果发送
+    // std::string info = "SWP," + fileName + ",0\r";
+    // communication.tcp_send(info);
 }
 
 
@@ -2999,8 +3021,8 @@ void MainWindow::sendImagePixelEven1(float x, float y, int r, int g, int b)
         //                                   QMessageBox::StandardButton::Cancel);
         // if(r == QMessageBox::StandardButton::Ok)
         // {
-        std::string info = "T1,0," + to_string_with_precision(x, 3) + "," + to_string_with_precision(y, 3) + ",0\r";
-        communication.tcp_send(info);
+        // std::string info = "T1,0," + to_string_with_precision(x, 3) + "," + to_string_with_precision(y, 3) + ",0\r";
+        // communication.tcp_send(info);
         // }
         //
     }
@@ -3015,8 +3037,8 @@ void MainWindow::sendImagePixelEven2(float x, float y, int r, int g, int b)
         //                                   QMessageBox::StandardButton::Cancel);
         // if(r == QMessageBox::StandardButton::Ok)
         // {
-        std::string info = "T2,0," + to_string_with_precision(x, 3) + "," + to_string_with_precision(y, 3) + ",0\r";
-        communication.tcp_send(info);
+        // std::string info = "T2,0," + to_string_with_precision(x, 3) + "," + to_string_with_precision(y, 3) + ",0\r";
+        // communication.tcp_send(info);
         // }
         //
     }
@@ -3025,8 +3047,8 @@ void MainWindow::sendImagePixelEven2(float x, float y, int r, int g, int b)
 
 void MainWindow::on_pushButton_7_clicked()
 {
-    std::string info = "SWP,0\n";
-    communication.tcp_send(info);
+    // std::string info = "SWP,0\n";
+    // communication.tcp_send(info);
 }
 
 
@@ -3037,7 +3059,7 @@ void MainWindow::on_action_calibration_triggered()
         // LOGE_HIGH("00");
 
         //打开设置界面
-        DialogRobotAcq *dialog = new DialogRobotAcq(&jobmanager, &communication, &communicationCOM, this);
+        DialogRobotAcq *dialog = new DialogRobotAcq(&jobmanager, &communicationCOM, this);
         Qt::WindowFlags flags = Qt::Dialog;
         flags |= Qt::WindowCloseButtonHint;
         dialog->setWindowFlags(flags);
@@ -3045,10 +3067,10 @@ void MainWindow::on_action_calibration_triggered()
         // LOGE_HIGH("11");
 
         // 加载接收触发事件
-        connect(&communication, &Communication::calibrationSignal, dialog, &DialogRobotAcq::calibrationCam);
+        // connect(&communication, &Communication::calibrationSignal, dialog, &DialogRobotAcq::calibrationCam);
         dialog->exec();
         // dialog->show();
-        disconnect(&communication, &Communication::calibrationSignal, dialog, &DialogRobotAcq::calibrationCam);
+        // disconnect(&communication, &Communication::calibrationSignal, dialog, &DialogRobotAcq::calibrationCam);
         // LOGE_HIGH("22");
 
     }
@@ -3079,7 +3101,7 @@ int MainWindow::calibrationCamTest(int cam_id, float robotX, float robotY)
         }
         std::string src_image_path = src_image_paths[tmp_src_img_id_list[cam_id]];
         cv::Mat src_image;
-        src_image = cv::imread(src_image_path, -1);
+        src_image = cv::imread(src_image_path, 1);
         jobmanager.jobworkers[cam_id].img = src_image;
         jobmanager.jobworkers[cam_id].update_display_img_signed(cam_id);
     }
@@ -3154,104 +3176,104 @@ void MainWindow::on_pushButton_sim_clicked(bool checked)
 
 void MainWindow::on_pushButton_save_calibration_data_clicked()
 {
-    if(communicationModbus.modbusClient->state() != QModbusDevice::ConnectedState)
-    {
-        LOGE("机器人未连接");
-        return;
-    }
-    if(jobmanager.jobworkers[0].img.empty())
-    {
-        LOGE("标定图片为空");
-        return;
-    }
-    //读取机器人坐标
-    float x, y, z, rx, ry, rz;
-    std::string msg;
-    bool rt  = communicationModbus.readFloat(1, 128, QModbusDataUnit::InputRegisters, x, msg);
-    if(rt)
-    {
-        LOGE("x:%f", x);
-    }
-    else
-    {
-        LOGE("读取坐标失败");
-    }
-    rt  = communicationModbus.readFloat(1, 130, QModbusDataUnit::InputRegisters, y, msg);
-    if(rt)
-    {
-        LOGE("y:%f", y);
-    }
-    else
-    {
-        LOGE("读取坐标失败");
-    }
-    rt  = communicationModbus.readFloat(1, 132, QModbusDataUnit::InputRegisters, z, msg);
-    if(rt)
-    {
-        LOGE("z:%f", z);
-    }
-    else
-    {
-        LOGE("读取坐标失败");
-    }
-    rt  = communicationModbus.readFloat(1, 134, QModbusDataUnit::InputRegisters, rx, msg);
-    if(rt)
-    {
-        LOGE("rx:%f", rx);
-    }
-    else
-    {
-        LOGE("读取坐标失败");
-    }
-    rt  = communicationModbus.readFloat(1, 136, QModbusDataUnit::InputRegisters, ry, msg);
-    if(rt)
-    {
-        LOGE("ry:%f", ry);
-    }
-    else
-    {
-        LOGE("读取坐标失败");
-    }
-    rt  = communicationModbus.readFloat(1, 138, QModbusDataUnit::InputRegisters, rz, msg);
-    if(rt)
-    {
-        LOGE("rz:%f", rz);
-    }
-    else
-    {
-        LOGE("读取坐标失败");
-    }
+    // if(communicationModbus.modbusClient->state() != QModbusDevice::ConnectedState)
+    // {
+    //     LOGE("机器人未连接");
+    //     return;
+    // }
+    // if(jobmanager.jobworkers[0].img.empty())
+    // {
+    //     LOGE("标定图片为空");
+    //     return;
+    // }
+    // //读取机器人坐标
+    // float x, y, z, rx, ry, rz;
+    // std::string msg;
+    // bool rt  = communicationModbus.readFloat(1, 128, QModbusDataUnit::InputRegisters, x, msg);
+    // if(rt)
+    // {
+    //     LOGE("x:%f", x);
+    // }
+    // else
+    // {
+    //     LOGE("读取坐标失败");
+    // }
+    // rt  = communicationModbus.readFloat(1, 130, QModbusDataUnit::InputRegisters, y, msg);
+    // if(rt)
+    // {
+    //     LOGE("y:%f", y);
+    // }
+    // else
+    // {
+    //     LOGE("读取坐标失败");
+    // }
+    // rt  = communicationModbus.readFloat(1, 132, QModbusDataUnit::InputRegisters, z, msg);
+    // if(rt)
+    // {
+    //     LOGE("z:%f", z);
+    // }
+    // else
+    // {
+    //     LOGE("读取坐标失败");
+    // }
+    // rt  = communicationModbus.readFloat(1, 134, QModbusDataUnit::InputRegisters, rx, msg);
+    // if(rt)
+    // {
+    //     LOGE("rx:%f", rx);
+    // }
+    // else
+    // {
+    //     LOGE("读取坐标失败");
+    // }
+    // rt  = communicationModbus.readFloat(1, 136, QModbusDataUnit::InputRegisters, ry, msg);
+    // if(rt)
+    // {
+    //     LOGE("ry:%f", ry);
+    // }
+    // else
+    // {
+    //     LOGE("读取坐标失败");
+    // }
+    // rt  = communicationModbus.readFloat(1, 138, QModbusDataUnit::InputRegisters, rz, msg);
+    // if(rt)
+    // {
+    //     LOGE("rz:%f", rz);
+    // }
+    // else
+    // {
+    //     LOGE("读取坐标失败");
+    // }
 
 
-    //保存图片 calibration/time/2d.bmp
-    QDateTime currentDateTime = QDateTime::currentDateTime();
-    std::string create_time = currentDateTime.toString("yyyyMMdd_hhmmss").toStdString();
-    LOGE("create_time:%s", create_time.data());
+    // //保存图片 calibration/time/2d.bmp
+    // QDateTime currentDateTime = QDateTime::currentDateTime();
+    // std::string create_time = currentDateTime.toString("yyyyMMdd_hhmmss").toStdString();
+    // LOGE("create_time:%s", create_time.data());
 
-    std::string save_img_path = "calibration/" + create_time + "/2d.bmp";
-
-
-    createMultipleFolders(QFileInfo(save_img_path.data()).absolutePath());
-
-    cv::imwrite(save_img_path, jobmanager.jobworkers[0].img);
+    // std::string save_img_path = "calibration/" + create_time + "/2d.bmp";
 
 
-    //保存数据 calibration/robotCoordinate.csv
-    std::string save_file_path = "calibration/robotCoordinate.csv";
+    // createMultipleFolders(QFileInfo(save_img_path.data()).absolutePath());
 
-    createMultipleFolders(QFileInfo(save_file_path.data()).absolutePath());
-    QList<QStringList>dataList;
-    QStringList data;
-    data.append(create_time.data());
-    data.append(std::to_string(x).data());
-    data.append(std::to_string(y).data());
-    data.append(std::to_string(z).data());
-    data.append(std::to_string(rx).data());
-    data.append(std::to_string(ry).data());
-    data.append(std::to_string(rz).data());
+    // cv::imwrite(save_img_path, jobmanager.jobworkers[0].img);
 
-    dataList.append(data);
-    saveCsvSimple(save_file_path.data(), dataList);
+
+    // //保存数据 calibration/robotCoordinate.csv
+    // std::string save_file_path = "calibration/robotCoordinate.csv";
+
+    // createMultipleFolders(QFileInfo(save_file_path.data()).absolutePath());
+    // QList<QStringList>dataList;
+    // QStringList data;
+    // data.append(create_time.data());
+    // data.append(std::to_string(x).data());
+    // data.append(std::to_string(y).data());
+    // data.append(std::to_string(z).data());
+    // data.append(std::to_string(rx).data());
+    // data.append(std::to_string(ry).data());
+    // data.append(std::to_string(rz).data());
+
+    // dataList.append(data);
+    // saveCsvSimple(save_file_path.data(), dataList);
 
 }
 
@@ -3280,9 +3302,9 @@ void MainWindow::closeEvent(QCloseEvent *event)
     if(is_close)
     {
         LOGE("111");
-        //断开连接
-        communication.tcp_server_dispose();
-        LOGE("222");
+        // //断开连接
+        // communication.tcp_server_dispose();
+        // LOGE("222");
 
 
         //关闭心跳
@@ -3290,9 +3312,9 @@ void MainWindow::closeEvent(QCloseEvent *event)
         runFut.waitForFinished();
         LOGE("heartBeat thread close");
 
-        //关闭机器人通讯
-        communicationModbus.modbusDisconnect();
-        LOGE("333");
+        // //关闭机器人通讯
+        // communicationModbus.modbusDisconnect();
+        // LOGE("333");
         //关闭光源通讯
         communicationCOM.disconnect();
 
@@ -3406,7 +3428,7 @@ void MainWindow::CheckCam(int cam_id, int worker_id)
 }
 
 
-void MainWindow::on_pushButton_sim_2_clicked(bool checked)
+void MainWindow::on_pushButton_auto_clicked(bool checked)
 {
 
 
@@ -3455,35 +3477,35 @@ void MainWindow::on_pushButton_sim_2_clicked(bool checked)
 
 void MainWindow::on_pushButton_sim_3_clicked(bool checked)
 {
-    if(checked)
-    {
-        int offset, val;
-        offset = 5;      //工位2结果输出位置为4，这里输到低通道就是5.
-        val = 1;
-        LOGE("start Write to DB %d.DBB%d :%d", DB_No, offset, val);
-        if(plcSiemens != nullptr && plcSiemens->MyS7Client->Connected())
-        {
-            int res = plcSiemens->WriteValue(plcSiemens->eByte, DB_No, offset, &val);
-            LOGE("WriteInt rt :%d", res);
+    // if(checked)
+    // {
+    //     int offset, val;
+    //     offset = 5;      //工位2结果输出位置为4，这里输到低通道就是5.
+    //     val = 1;
+    //     LOGE("start Write to DB %d.DBB%d :%d", DB_No, offset, val);
+    //     if(plcSiemens != nullptr && plcSiemens->MyS7Client->Connected())
+    //     {
+    //         int res = plcSiemens->WriteValue(plcSiemens->eByte, DB_No, offset, &val);
+    //         LOGE("WriteInt rt :%d", res);
 
-        }
+    //     }
 
-    }
-    else
-    {
-        int offset;
-        float val;
-        offset = 6;  //工位2结果输出位置为6，这里输到6.
-        val = 9.999;
-        LOGE("start Write to DB %d.DBB%d :%f", DB_No, offset, val);
-        if(plcSiemens != nullptr && plcSiemens->MyS7Client->Connected())
-        {
-            int res = plcSiemens->WriteValue(plcSiemens->eReal, DB_No, offset, &val);
+    // }
+    // else
+    // {
+    //     int offset;
+    //     float val;
+    //     offset = 6;  //工位2结果输出位置为6，这里输到6.
+    //     val = 9.999;
+    //     LOGE("start Write to DB %d.DBB%d :%f", DB_No, offset, val);
+    //     if(plcSiemens != nullptr && plcSiemens->MyS7Client->Connected())
+    //     {
+    //         int res = plcSiemens->WriteValue(plcSiemens->eReal, DB_No, offset, &val);
 
-            LOGE("WriteFloat rt :%d", res);
+    //         LOGE("WriteFloat rt :%d", res);
 
-        }
-    }
+    //     }
+    // }
 }
 
 
@@ -3556,7 +3578,7 @@ void MainWindow::on_tableWidget_itemSelectionChanged()
         //图片读取
         std::string src_image_path = jobmanager.jobworkers[workID].imgPathList[imgID];
         cv::Mat src_image;
-        src_image = cv::imread(src_image_path, -1);
+        src_image = cv::imread(src_image_path, 1);
         jobmanager.jobworkers[workID].img = src_image;
         jobmanager.jobworkers[workID].update_display_img_signed(workID);
 

@@ -1,6 +1,15 @@
 ﻿#include "jobworker.h"
 #include "QDeBug"
 
+template <typename T>
+std::string to_string_with_precision(const T a_value, const int n = 6)
+{
+    int nn = n ;
+    std::ostringstream out;
+    out.setf(std::ios::fixed);
+    out << std::setprecision(nn) << a_value;
+    return out.str();
+}
 
 QImage MatToQImage(const cv::Mat &cvImage)
 {
@@ -102,6 +111,10 @@ JobWorker::JobWorker(JobWorker *parent)
 
     ///输出结果
     this-> resultType =  parent->resultType;
+
+    this-> defectAreaThre =  parent->defectAreaThre;
+    this-> defectDetThre =  parent->defectDetThre;
+
 }
 
 JobWorker::JobWorker(const JobWorker &jobworker)
@@ -187,6 +200,10 @@ JobWorker::JobWorker(const JobWorker &jobworker)
 
     ///输出结果
     this-> resultType = jobworker.resultType;
+
+    this-> defectAreaThre =  jobworker.defectAreaThre;
+    this-> defectDetThre =  jobworker.defectDetThre;
+
 }
 
 JobWorker &JobWorker::operator =(const JobWorker &jobworker)
@@ -274,6 +291,8 @@ JobWorker &JobWorker::operator =(const JobWorker &jobworker)
     this-> resultType = jobworker.resultType;
 
 
+    this-> defectAreaThre =  jobworker.defectAreaThre;
+    this-> defectDetThre =  jobworker.defectDetThre;
 
     return *this;
 }
@@ -287,18 +306,33 @@ JobWorker::JobWorker(int &id)
 
 void JobWorker::init()
 {
-    if(is_train)
-    {
-        if(cam_id == 0)
-        {
-            is_train = true;
-        }
-        else
-        {
-            train_location();
-        }
+    // if(is_train)
+    // {
+    //     if(cam_id == 0)
+    //     {
+    //         is_train = true;
+    //     }
+    //     else
+    //     {
+    //         train_location();
+    //     }
 
+    // }
+    std::string modelPath = "model/Det_model.onnx";
+    LOGE("start init SupervisedModel");
+
+    if(detSegModel != nullptr)
+    {
+        RaivasSeg_Destroy(detSegModel);
     }
+    detSegModel = RaivasSeg_Create();
+
+    int rt = RaivasSeg_Init(detSegModel, modelPath.c_str(), 0.5, 1280, false);
+
+    LOGE("rt :%d", rt);
+
+    LOGE("finish init SupervisedModel");
+
 }
 
 void JobWorker::acqfifo_complete(cv::Mat tmp_img)
@@ -491,6 +525,103 @@ void JobWorker::runShapeMatch(cv::Mat img)
         return;
     }
 }
+
+void JobWorker::runDefectDetTool(cv::Mat img)
+{
+    defectDetResult = true;
+    defectDetResults.clear();
+    //
+
+    try
+    {
+        if(!img.empty() && detSegModel != nullptr)
+        {
+            std::vector<DetectSegResult> results;
+            LOGE("start RaivasSeg_Detect");
+
+            cv::Mat processImg;
+            int ch = img.channels();
+
+            if(ch == 4)
+            {
+                // BGRA → BGR
+                cv::cvtColor(img, processImg, cv::COLOR_BGRA2BGR);
+            }
+            else if(ch == 3)
+            {
+                // 已经是3通道，直接拷贝
+                processImg = img.clone();
+            }
+            else if(ch == 1)
+            {
+                // 灰度 → BGR
+                cv::cvtColor(img, processImg, cv::COLOR_GRAY2BGR);
+            }
+            else if(ch == 2)
+            {
+                // 2通道比较少见，先转灰度再转BGR
+                cv::Mat temp;
+                cv::cvtColor(img, temp, cv::COLOR_BGR5652BGR); // 或按需处理
+                processImg = temp;
+            }
+            else
+            {
+                // fallback：强制reshape
+                std::vector<cv::Mat> channels(ch);
+                cv::split(img, channels);
+                processImg = channels[0]; // 取第一个通道
+                cv::cvtColor(processImg, processImg, cv::COLOR_GRAY2BGR);
+            }
+
+            RaivasSeg_Detect(detSegModel, &processImg, &results);
+            LOGE("defect det result len:%d", results.size());
+            for(int i = 0; i < results.size(); ++i)
+            {
+                LOGE("defect det result score:%d", results[i].score);
+                LOGE("defect det result area:%d", results[i].box.area());
+
+                if(results[i].score > defectDetThre && results[i].box.area() > defectAreaThre)
+                {
+                    defectDetResults.push_back(results[i]);
+                }
+            }
+
+            if(defectDetResults.size() > 0)
+            {
+                defectDetResult = false;
+                return;
+            }
+        }
+        else
+        {
+            LOGE("img.empty() or detSegModel is nullptr");
+
+        }
+
+    }
+    catch(cv::Exception &e)
+    {
+        locationResult = false;
+        LOGE_HIGH(e.what());
+    }
+    catch(std::exception &e)
+    {
+        locationResult = false;
+        LOGE_HIGH(e.what());
+    }
+    catch(QException &e)
+    {
+        locationResult = false;
+        LOGE_HIGH(e.what());
+    }
+    catch(...)
+    {
+        locationResult = false;
+        LOGE_HIGH("other error.");
+    }
+
+}
+
 
 void JobWorker::runCaliperTool(cv::Mat img)
 {
@@ -784,8 +915,8 @@ void JobWorker::run()
         }
         else
         {
-            LOGE("start runCaliperTool");
-            runCaliperTool(img);
+            LOGE("start runDefectDetTool");
+            runDefectDetTool(img);
 
             if(!isSiming)
             {
@@ -912,14 +1043,19 @@ void JobWorker::show_result()
         QGraphicsTextItem *tmp_string = new QGraphicsTextItem("str");
         QGraphicsLineItem *tmp_my_line = new QGraphicsLineItem();
         QGraphicsEllipseItem *tmp_ellip = new QGraphicsEllipseItem();
+        MyTextItem *tmp_text = new MyTextItem("");
         display->myGraphicsView->cleanItem(tmp_rect);
         display->myGraphicsView->cleanItem(tmp_string);
         display->myGraphicsView->cleanItem(tmp_my_line);
         display->myGraphicsView->cleanItem(tmp_ellip);
+        display->myGraphicsView->cleanItem(tmp_text);
+
         delete tmp_rect;
         delete tmp_string;
         delete tmp_my_line;
         delete tmp_ellip;
+        delete tmp_text;
+
         std::vector<QGraphicsItem *> item_list;
 
 
@@ -929,40 +1065,44 @@ void JobWorker::show_result()
         }
         else
         {
-            if(locationCaliperResult)
+            if(!defectDetResult)
             {
 
-                int line_wide = 5;
-                int radio = 10;
-
-                for(int id = 0; id < caliperLocationResult.size(); ++id)
+                for(int id = 0; id < defectDetResults.size(); ++id)
                 {
-                    if(caliperLocationResult[id])
-                    {
-                        QGraphicsEllipseItem *result_item = new QGraphicsEllipseItem(caliperLocationOriginPoints[id].x - radio / 2,
-                            caliperLocationOriginPoints[id].y - radio / 2, radio, radio);
+                    cv::Rect defect_rect(defectDetResults[id].box);
+                    defectDetResults[id].box.area();
+                    // tmpDefectDetRectList.push_back(defect_rect);
 
-                        QPen pn(Qt::SolidLine);
-                        pn.setColor(Qt::green);
-                        pn.setWidth(line_wide);
-                        result_item->setPen(pn);
-                        item_list.push_back(result_item);
-                    }
+                    int line_wide = 5;
+                    QGraphicsRectItem *result_item = new QGraphicsRectItem(defect_rect.x, defect_rect.y,
+                        (defect_rect.width), (defect_rect.height));
+
+                    QPen pn(Qt::SolidLine);
+                    pn.setColor(Qt::red);
+                    pn.setWidth(line_wide);
+                    result_item->setPen(pn);
+                    item_list.push_back(result_item);
+
+                    MyTextItem *item_text = new MyTextItem((std::to_string(defectDetResults[id].classId) + " " + std::to_string(int(defectDetResults[id].box.area()))
+                                                            + " " + to_string_with_precision(defectDetResults[id].score, 3)).data()) ;
+
+                    float scale = min((float)display->myGraphicsView->height() / (img.rows),
+                                      (float)display->myGraphicsView->width() / (img.cols));
+
+
+                    item_text->setCustomPos((display->myGraphicsView->width() - (img.cols)* scale) / 2
+                                            + (defect_rect.x + defect_rect.width)  * scale,
+                                            (display->myGraphicsView->height() - (img.rows)* scale) / 2
+                                            + (defect_rect.y + defect_rect.height)  * scale);
+
+                    item_text->setDefaultTextColor(Qt::red);
+                    QFont font;
+                    font.setPointSize(50);
+                    item_text->setFont(font);
+
+                    item_list.push_back(item_text);
                 }
-                //求出直线上的两个点
-                double k_line = fitline[1] / fitline[0];
-                QPointF p1(0, k_line * (0 - fitline[2]) + fitline[3]);
-                QPointF p2(img.cols - 1, k_line * (img.cols - 1 - fitline[2]) + fitline[3]);
-
-                QGraphicsLineItem *result_item2 = new QGraphicsLineItem(QLineF(p1, p2));
-                QPen pn(Qt::SolidLine);
-                pn.setColor(Qt::blue);
-                pn.setWidth(line_wide);
-                result_item2->setPen(pn);
-                item_list.push_back(result_item2);
-
-                //结果显示
-
             }
             if(!result())
             {
@@ -1028,7 +1168,7 @@ void JobWorker::dispose()
 bool JobWorker::result()
 {
     bool rt = true;
-    if(!locationCaliperResult)
+    if(!defectDetResult)
     {
         rt = false;
     }
@@ -1132,15 +1272,7 @@ QString createMultipleFolders(const QString path)
     return parentDir + "/" + dirName;
 }
 
-template <typename T>
-std::string to_string_with_precision(const T a_value, const int n = 6)
-{
-    int nn = n ;
-    std::ostringstream out;
-    out.setf(std::ios::fixed);
-    out << std::setprecision(nn) << a_value;
-    return out.str();
-}
+
 
 //void JobWorker::save_img(Yolo::BoxArray boxs)
 //{
