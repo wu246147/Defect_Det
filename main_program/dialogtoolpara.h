@@ -57,6 +57,8 @@ public:
 
     bool is_loading = true;
 
+    MyGraphicRectItem *myRectItem_select = nullptr ;
+
     MyGraphicRectItem *myRectItem_location = nullptr ;
 
     MyGraphicRectItem *myRectItem_center = nullptr ;
@@ -191,6 +193,8 @@ private slots:
     void on_doubleSpinBox_object_detect_thre_valueChanged(double arg1);
 
     void on_spinBox_defect_area_thre_valueChanged(int arg1);
+
+    void on_pushButton_update_trainROI_clicked();
 
 signals:
     void save_file_signal();

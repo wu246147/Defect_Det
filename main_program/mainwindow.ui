@@ -206,13 +206,13 @@ QGroupBox
       <property name="minimumSize">
        <size>
         <width>0</width>
-        <height>40</height>
+        <height>60</height>
        </size>
       </property>
       <property name="maximumSize">
        <size>
         <width>16777215</width>
-        <height>35</height>
+        <height>60</height>
        </size>
       </property>
       <layout class="QGridLayout" name="gridLayout_10">
@@ -377,7 +377,7 @@ color: #FFFFFF;</string>
             <string notr="true"/>
            </property>
            <property name="text">
-            <string>PLC连接状态：</string>
+            <string>机器人连接状态：</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -498,7 +498,7 @@ color: #FFFFFF;</string>
               </size>
              </property>
              <property name="styleSheet">
-              <string notr="true">	background-color: rgb(60, 68, 81);</string>
+              <string notr="true">background-color: rgb(42, 52, 64);</string>
              </property>
              <layout class="QGridLayout" name="gridLayout_7">
               <property name="leftMargin">
@@ -754,7 +754,7 @@ QPushButton:checked
               </size>
              </property>
              <property name="styleSheet">
-              <string notr="true">	background-color: rgb(60, 68, 81);</string>
+              <string notr="true">background-color: rgb(42, 52, 64);</string>
              </property>
              <layout class="QGridLayout" name="gridLayout_8">
               <property name="leftMargin">
@@ -877,7 +877,8 @@ color: rgb(0, 120, 220);</string>
            </size>
           </property>
           <property name="styleSheet">
-           <string notr="true">		background-color: rgb(60, 68, 81);</string>
+           <string notr="true">
+background-color: rgb(42, 52, 64);</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_6">
            <property name="topMargin">
@@ -1656,7 +1657,7 @@ background-color: transparent;</string>
           <property name="styleSheet">
            <string notr="true">QWidget
 {
-	background-color: rgb(60, 68, 81);
+	background-color: rgb(42, 52, 64);
 }
 </string>
           </property>
@@ -2049,6 +2050,9 @@ border-bottom: 2px solid #808080;
    </property>
    <property name="iconText">
     <string>新建作业</string>
+   </property>
+   <property name="font">
+    <font/>
    </property>
   </action>
   <action name="action_simulation">

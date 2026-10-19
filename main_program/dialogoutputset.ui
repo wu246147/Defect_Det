@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>640</width>
-    <height>480</height>
+    <height>574</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -43,55 +43,17 @@
      <property name="maximumSize">
       <size>
        <width>16777215</width>
-       <height>100</height>
+       <height>400</height>
       </size>
      </property>
      <property name="title">
       <string>垃圾桶</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_ip_2">
+      <item row="6" column="0">
+       <widget class="QLabel" name="label_station_2_delay">
         <property name="text">
-         <string>工位2 ip地址：</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1" colspan="3">
-       <widget class="QLineEdit" name="lineEdit_ip_2"/>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_ip_3">
-        <property name="text">
-         <string>工位2 port：</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1" colspan="3">
-       <widget class="QSpinBox" name="spinBox_port_2">
-        <property name="maximum">
-         <number>10000</number>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0" rowspan="2">
-       <widget class="QLabel" name="label_station_1_delay">
-        <property name="text">
-         <string>工位1延迟：</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2" rowspan="2">
-       <widget class="QSpinBox" name="spinBox_station_1_delay">
-        <property name="maximum">
-         <number>10000</number>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="3" rowspan="3" colspan="2">
-       <widget class="QLabel" name="label_station_1_delay_value">
-        <property name="text">
-         <string>ms</string>
+         <string>工位2延迟：</string>
         </property>
        </widget>
       </item>
@@ -102,42 +64,8 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="0" colspan="2">
-       <widget class="QLabel" name="label_station_1_output_cam">
-        <property name="text">
-         <string>工位1输出使用相机：</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="2">
-       <widget class="QComboBox" name="comboBox_station_1_output_cam"/>
-      </item>
-      <item row="5" column="0" colspan="2">
-       <widget class="QLabel" name="label_station_1_output_line">
-        <property name="text">
-         <string>工位1输出使用线：</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="2">
-       <widget class="QComboBox" name="comboBox_station_1_output_line"/>
-      </item>
-      <item row="6" column="0">
-       <widget class="QLabel" name="label_station_2_delay">
-        <property name="text">
-         <string>工位2延迟：</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="2">
-       <widget class="QSpinBox" name="spinBox_station_2_delay">
-        <property name="maximum">
-         <number>10000</number>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="3">
-       <widget class="QLabel" name="label_station_2_delay_value">
+      <item row="2" column="3" rowspan="3" colspan="2">
+       <widget class="QLabel" name="label_station_1_delay_value">
         <property name="text">
          <string>ms</string>
         </property>
@@ -150,15 +78,8 @@
         </property>
        </widget>
       </item>
-      <item row="7" column="0">
-       <widget class="QLabel" name="label_output_delay">
-        <property name="text">
-         <string>吹气持续时间：</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="2">
-       <widget class="QSpinBox" name="spinBox_output_delay">
+      <item row="2" column="2" rowspan="2">
+       <widget class="QSpinBox" name="spinBox_station_1_delay">
         <property name="maximum">
          <number>10000</number>
         </property>
@@ -171,6 +92,78 @@
         </property>
        </widget>
       </item>
+      <item row="4" column="2">
+       <widget class="QComboBox" name="comboBox_station_1_output_cam"/>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_ip_2">
+        <property name="text">
+         <string>工位2 ip地址：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" colspan="3">
+       <widget class="QSpinBox" name="spinBox_port_2">
+        <property name="maximum">
+         <number>10000</number>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="2">
+       <widget class="QSpinBox" name="spinBox_station_2_delay">
+        <property name="maximum">
+         <number>10000</number>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0" colspan="2">
+       <widget class="QLabel" name="label_station_1_output_line">
+        <property name="text">
+         <string>工位1输出使用线：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="2">
+       <widget class="QSpinBox" name="spinBox_output_delay">
+        <property name="maximum">
+         <number>10000</number>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <widget class="QComboBox" name="comboBox_station_1_output_line"/>
+      </item>
+      <item row="0" column="1" colspan="3">
+       <widget class="QLineEdit" name="lineEdit_ip_2"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_ip_3">
+        <property name="text">
+         <string>工位2 port：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="2">
+       <widget class="QLabel" name="label_station_1_output_cam">
+        <property name="text">
+         <string>工位1输出使用相机：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0">
+       <widget class="QLabel" name="label_output_delay">
+        <property name="text">
+         <string>吹气持续时间：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="3">
+       <widget class="QLabel" name="label_station_2_delay_value">
+        <property name="text">
+         <string>ms</string>
+        </property>
+       </widget>
+      </item>
       <item row="7" column="4">
        <widget class="QPushButton" name="pushButton_station_1_test">
         <property name="text">
@@ -178,163 +171,170 @@
         </property>
        </widget>
       </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="2" column="0" colspan="4">
-    <widget class="QGroupBox" name="groupBox_2">
-     <property name="title">
-      <string>通讯参数</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_2">
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_5">
+      <item row="2" column="0" rowspan="2">
+       <widget class="QLabel" name="label_station_1_delay">
         <property name="text">
-         <string>准备好</string>
+         <string>工位1延迟：</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>心跳</string>
+      <item row="8" column="0" colspan="5">
+       <widget class="QGroupBox" name="groupBox_2">
+        <property name="title">
+         <string>通讯参数</string>
         </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QLineEdit" name="lineEdit_io_1"/>
-      </item>
-      <item row="7" column="0">
-       <widget class="QLabel" name="label_9">
-        <property name="text">
-         <string>车型</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="2">
-       <widget class="QLineEdit" name="lineEdit_io_8"/>
-      </item>
-      <item row="8" column="0">
-       <widget class="QLabel" name="label_10">
-        <property name="text">
-         <string>切换车型信号</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="2">
-       <widget class="QLineEdit" name="lineEdit_io_7"/>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>信号名称</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2">
-       <widget class="QLineEdit" name="lineEdit_io_2"/>
-      </item>
-      <item row="6" column="2">
-       <widget class="QLineEdit" name="lineEdit_io_6"/>
-      </item>
-      <item row="0" column="2">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>信号地址</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="2">
-       <widget class="QLineEdit" name="lineEdit_io_4"/>
-      </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>检测结果</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="2">
-       <widget class="QLineEdit" name="lineEdit_io_3"/>
-      </item>
-      <item row="5" column="2">
-       <widget class="QLineEdit" name="lineEdit_io_5"/>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>检测完成</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>触发拍照</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>车型反馈</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLabel" name="label_11">
-        <property name="text">
-         <string>  D</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLabel" name="label_12">
-        <property name="text">
-         <string>  D</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QLabel" name="label_13">
-        <property name="text">
-         <string>  D</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QLabel" name="label_14">
-        <property name="text">
-         <string>  D</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1">
-       <widget class="QLabel" name="label_15">
-        <property name="text">
-         <string>  D</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="1">
-       <widget class="QLabel" name="label_16">
-        <property name="text">
-         <string>  D</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="1">
-       <widget class="QLabel" name="label_17">
-        <property name="text">
-         <string>  D</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="1">
-       <widget class="QLabel" name="label_18">
-        <property name="text">
-         <string>  D</string>
-        </property>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>准备好</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>心跳</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QLineEdit" name="lineEdit_io_1"/>
+         </item>
+         <item row="7" column="0">
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>车型</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="2">
+          <widget class="QLineEdit" name="lineEdit_io_8"/>
+         </item>
+         <item row="8" column="0">
+          <widget class="QLabel" name="label_10">
+           <property name="text">
+            <string>切换车型信号</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="2">
+          <widget class="QLineEdit" name="lineEdit_io_7"/>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>信号名称</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QLineEdit" name="lineEdit_io_2"/>
+         </item>
+         <item row="6" column="2">
+          <widget class="QLineEdit" name="lineEdit_io_6"/>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>信号地址</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="2">
+          <widget class="QLineEdit" name="lineEdit_io_4"/>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>检测结果</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2">
+          <widget class="QLineEdit" name="lineEdit_io_3"/>
+         </item>
+         <item row="5" column="2">
+          <widget class="QLineEdit" name="lineEdit_io_5"/>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>检测完成</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>触发拍照</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>车型反馈</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLabel" name="label_11">
+           <property name="text">
+            <string>  D</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLabel" name="label_12">
+           <property name="text">
+            <string>  D</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLabel" name="label_13">
+           <property name="text">
+            <string>  D</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLabel" name="label_14">
+           <property name="text">
+            <string>  D</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QLabel" name="label_15">
+           <property name="text">
+            <string>  D</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QLabel" name="label_16">
+           <property name="text">
+            <string>  D</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <widget class="QLabel" name="label_17">
+           <property name="text">
+            <string>  D</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="1">
+          <widget class="QLabel" name="label_18">
+           <property name="text">
+            <string>  D</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
      </layout>

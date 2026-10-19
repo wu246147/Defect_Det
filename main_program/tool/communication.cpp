@@ -50,11 +50,15 @@ void Communication::tcp_socker_connected()
     m_tcpSocketList.push_back(m_tcpSocket);
 
     std::cout << "connect success!!!" << std::endl;
+
+    isConnected = true;
 }
 
 void Communication::tcp_socker_disconnected()
 {
     std::cout << "disconnect success!!!" << std::endl;
+    isConnected = false;
+
 }
 
 void Communication::tcp_send(std::string info)
@@ -87,6 +91,11 @@ void Communication::tcp_ready_read()
         // std::cout <<  << std::endl;
         QStringList infoList = info.split(',');
 
+
+        //运行
+
+        checkCamSignal(infoList[2].toInt() - 1, 0, infoList[1].toStdString());
+
         // if(infoList[7].toInt() == 3)
         // {
         //     //运行
@@ -109,36 +118,36 @@ void Communication::tcp_ready_read()
         //     // m_tcpSocket->write((info + "\n").data());
 
         // }
-        if(infoList[0].toInt() == 101)
-        {
-            //运行
-            checkCamSignal(infoList[2].toInt(), infoList[3].toInt(), infoList[1].toStdString());
-        }
-        else if(infoList[0].toInt() == 701)
-        {
-            // LOGE("000");
+        // if(infoList[0].toInt() == 101)
+        // {
+        //     //运行
+        //     checkCamSignal(infoList[2].toInt(), infoList[3].toInt(), infoList[1].toStdString());
+        // }
+        // else if(infoList[0].toInt() == 701)
+        // {
+        //     // LOGE("000");
 
-            //标定
-            calibrationSignal(infoList[4].toFloat(),
-                              infoList[5].toFloat(),
-                              infoList[6].toFloat(),
-                              infoList[7].toFloat(),
-                              infoList[8].toFloat(),
-                              infoList[9].toFloat());
-            // LOGE("001");
+        //     //标定
+        //     calibrationSignal(infoList[4].toFloat(),
+        //                       infoList[5].toFloat(),
+        //                       infoList[6].toFloat(),
+        //                       infoList[7].toFloat(),
+        //                       infoList[8].toFloat(),
+        //                       infoList[9].toFloat());
+        //     // LOGE("001");
 
-            // //返回结果
-            // tcp_send("1,0,0,0,0,0,0,0,0,");
+        //     // //返回结果
+        //     // tcp_send("1,0,0,0,0,0,0,0,0,");
 
-            // m_tcpSocket->write((info + "\n").data());
+        //     // m_tcpSocket->write((info + "\n").data());
 
-        }
+        // }
 
-        else
-        {
-            LOGE("not have this Instruction:%d", infoList[7].toInt());
+        // else
+        // {
+        //     LOGE("not have this Instruction:%d", infoList[7].toInt());
 
-        }
+        // }
 
         LOGE_HIGH("finish tcp process");
     }

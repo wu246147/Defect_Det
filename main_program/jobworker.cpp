@@ -46,6 +46,10 @@ JobWorker::JobWorker(JobWorker *parent)
     this-> lightChannel =  parent->lightChannel;
 
 
+    //记录训练模板框
+    this-> defectSelectBox =  parent->defectSelectBox;
+
+
     //尺寸检测范围
     this-> caliper_distances_limit =  parent->caliper_distances_limit;
 
@@ -145,6 +149,9 @@ JobWorker::JobWorker(const JobWorker &jobworker)
     this-> train_image = jobworker.train_image;
 
     //记录训练模板框
+    this-> defectSelectBox = jobworker.defectSelectBox;
+
+    //记录训练模板框
     this-> model_box = jobworker.model_box;
     // cv::Mat train_image_cut;
     //记录训练边缘框
@@ -233,6 +240,8 @@ JobWorker &JobWorker::operator =(const JobWorker &jobworker)
     //记录训练图片
     this-> train_image = jobworker.train_image;
 
+    //记录训练模板框
+    this-> defectSelectBox = jobworker.defectSelectBox;
     //记录训练模板框
     this-> model_box = jobworker.model_box;
     // cv::Mat train_image_cut;
@@ -534,6 +543,8 @@ void JobWorker::runDefectDetTool(cv::Mat img)
 
     try
     {
+        auto start = std::chrono::high_resolution_clock::now();
+
         if(!img.empty() && detSegModel != nullptr)
         {
             std::vector<DetectSegResult> results;
@@ -577,19 +588,30 @@ void JobWorker::runDefectDetTool(cv::Mat img)
             LOGE("defect det result len:%d", results.size());
             for(int i = 0; i < results.size(); ++i)
             {
-                LOGE("defect det result score:%d", results[i].score);
-                LOGE("defect det result area:%d", results[i].box.area());
-
-                if(results[i].score > defectDetThre && results[i].box.area() > defectAreaThre)
+                LOGE("defect det result score:%f", results[i].score);
+                LOGE("defect det result area:%f", results[i].box.area());
+                //范围筛选
+                if(!defectSelectBox.contains(cv::Point(results[i].box.x + results[i].box.width / 2, results[i].box.y + results[i].box.height / 2)))
                 {
-                    defectDetResults.push_back(results[i]);
+                    continue;
                 }
+
+                //阈值筛选
+                if(results[i].score < defectDetThre || results[i].box.area() < defectAreaThre)
+                {
+                    continue;
+                }
+
+                defectDetResults.push_back(results[i]);
             }
+
+
+
+
 
             if(defectDetResults.size() > 0)
             {
                 defectDetResult = false;
-                return;
             }
         }
         else
@@ -597,6 +619,13 @@ void JobWorker::runDefectDetTool(cv::Mat img)
             LOGE("img.empty() or detSegModel is nullptr");
 
         }
+
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+        LOGE("Defect total: %lld ms", duration);
+        LOGE("-----------------------------------");
+
 
     }
     catch(cv::Exception &e)

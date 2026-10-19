@@ -280,6 +280,10 @@ public:
 
     const std::string edgeType = "long";
 
+    //记录检测区域框
+    cv::Rect defectSelectBox = cv::Rect(100, 100, 100, 100);
+
+
     ///初定位参数
     int circleThre = 45;
     int chipThre = 158;
@@ -725,6 +729,11 @@ public:
             name = "boxes";
             ar &name;
             ar &boxes;
+
+            name = "defectSelectBox";
+            ar &name;
+            ar &defectSelectBox;
+
             name = "center_box";
             ar &name;
             ar &center_box;
@@ -905,6 +914,12 @@ public:
                     {
                         ar &model_box;
                     }
+
+                    else if(name.compare("defectSelectBox") == 0)
+                    {
+                        ar &defectSelectBox;
+                    }
+
                     else if(name.compare("boxes") == 0)
                     {
                         ar &boxes;

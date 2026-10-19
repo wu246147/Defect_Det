@@ -470,9 +470,9 @@ MainWindow::MainWindow(QWidget *parent)
     // plcSiemens->m_exitThread = true;
     // plcSiemens->start();
 
-    // //tcp通讯初始化
-    // communication.tcp_server_init();
-    // LOGE_HIGH("MainWindow finish tcp init")
+    //tcp通讯初始化
+    communication.tcp_server_init();
+    LOGE_HIGH("MainWindow finish tcp init")
     // //机器人通讯
     // std::string msg;
     // LOGE_HIGH("communicationModbus.plc_ip:%s", communicationModbus.plc_ip.data());
@@ -482,9 +482,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     // LOGE_HIGH("msg:%s", msg.data());
 
-    //丰田plc初始化
-    plcToyopuc = new ToyopucCaller();
-    plcToyopuc->connectToPLC(plcIPAddress, port);
+    // //丰田plc初始化
+    // plcToyopuc = new ToyopucCaller();
+    // plcToyopuc->connectToPLC(plcIPAddress, port);
 
 
 
@@ -506,16 +506,15 @@ MainWindow::MainWindow(QWidget *parent)
     changeShowMode();
     LOGE_HIGH("MainWindow finish init")
 
-    //心跳，用于给plc发送一些状态
-    isRunning = true;
-    runFut = QtConcurrent::run(this, &MainWindow::runThread);
-    LOGE("run thread start");
+    // //心跳，用于给plc发送一些状态
+    // isRunning = true;
+    // runFut = QtConcurrent::run(this, &MainWindow::runThread);
+    // LOGE("run thread start");
 
-    // plc 信号线程启动
-    // 创建plc监听线程
+    // // plc 信号线程启动
+    // // 创建plc监听线程
     plcInfoTime = new QTimer(this);
     connect(plcInfoTime, &QTimer::timeout, this, &MainWindow::plcInfoUpdateEven);
-
     plcInfoTime->setInterval(200);
     plcInfoTime->start();
 
@@ -605,7 +604,89 @@ void MainWindow::plcInfoUpdateEven()
 {
     try
     {
-        if(plcToyopuc != nullptr && plcToyopuc->isConnected())
+        // if(plcToyopuc != nullptr && plcToyopuc->isConnected())
+        // {
+        //     //显示plc连接状态
+        //     QMetaObject::invokeMethod(ui->pushButton_plc_connect_state, [pushButton = ui->pushButton_plc_connect_state]()
+        //     {
+        //         QString styleSheetPushButton = QString("QPushButton{background-color: rgb(13, 232, 16);border-radius:10px;}");
+        //         pushButton->setStyleSheet(styleSheetPushButton);
+        //     }, Qt::QueuedConnection);
+
+
+        //     ///作业切换信号
+        //     //判断是否要切换
+        //     bool isChangeFile = false;
+        //     int currentJobFileID = -1;
+        //     int changeJobFileID = -1;
+        //     int isChangeJob = 0;
+
+        //     plcToyopuc->readInt(IOPara["vehicleModeChange"], isChangeJob);
+        //     if(isChangeJob == 1)
+        //     {
+        //         //复位信号
+        //         int val;
+        //         val = 0;
+        //         plcToyopuc->writeInt(IOPara["vehicleModeChange"], val);
+        //         try
+        //         {
+        //             currentJobFileID = job_name.toInt();
+
+        //             plcToyopuc->readInt(IOPara["vehicleMode"], changeJobFileID);
+
+        //             if(currentJobFileID != changeJobFileID)
+        //             {
+        //                 isChangeFile = true;
+        //             }
+        //         }
+        //         catch(...)
+        //         {
+        //             LOGE("error:job_name is not int");
+        //         }
+        //     }
+        //     //执行切换
+        //     if(isChangeFile)
+        //     {
+        //         QString job_path = QString(job_root_path + "/" + std::to_string(changeJobFileID).data() + ".data");
+        //         if(!QFile(job_path).exists())
+        //         {
+        //             QMetaObject::invokeMethod(this, [stringInfo = std::to_string(changeJobFileID).data(), ui = this]()
+        //             {
+        //                 QMessageBox::warning(ui, "警告.", "作业还没创建，请先创建作业： " + QString(stringInfo), QMessageBox::StandardButton::Ok);
+        //             }, Qt::QueuedConnection);
+        //         }
+        //         else
+        //         {
+        //             changeFileSignal(std::to_string(changeJobFileID));
+        //         }
+        //     }
+
+        //     ///触发取像
+        //     int val = 0;
+        //     plcToyopuc->readInt(IOPara["check"], val);
+        //     if(val == 1)
+        //     {
+        //         //复位信号
+        //         val = 0;
+        //         plcToyopuc->writeInt(IOPara["check"], val);
+        //         //拍照
+        //         checkCamSignal(0, 0);
+        //     }
+
+
+        // }
+        // else
+        // {
+        //     //显示plc连接状态
+        //     QMetaObject::invokeMethod(ui->pushButton_plc_connect_state, [pushButton = ui->pushButton_plc_connect_state]()
+        //     {
+        //         QString styleSheetPushButton = QString("QPushButton{background-color: #bd3124;border-radius:10px;}");
+        //         pushButton->setStyleSheet(styleSheetPushButton);
+        //     }, Qt::QueuedConnection);
+        // }
+
+
+        if(communication.isConnected)
         {
             //显示plc连接状态
             QMetaObject::invokeMethod(ui->pushButton_plc_connect_state, [pushButton = ui->pushButton_plc_connect_state]()
@@ -613,67 +694,6 @@ void MainWindow::plcInfoUpdateEven()
                 QString styleSheetPushButton = QString("QPushButton{background-color: rgb(13, 232, 16);border-radius:10px;}");
                 pushButton->setStyleSheet(styleSheetPushButton);
             }, Qt::QueuedConnection);
-
-
-            ///作业切换信号
-            //判断是否要切换
-            bool isChangeFile = false;
-            int currentJobFileID = -1;
-            int changeJobFileID = -1;
-            int isChangeJob = 0;
-
-            plcToyopuc->readInt(IOPara["vehicleModeChange"], isChangeJob);
-            if(isChangeJob == 1)
-            {
-                //复位信号
-                int val;
-                val = 0;
-                plcToyopuc->writeInt(IOPara["vehicleModeChange"], val);
-                try
-                {
-                    currentJobFileID = job_name.toInt();
-
-                    plcToyopuc->readInt(IOPara["vehicleMode"], changeJobFileID);
-
-                    if(currentJobFileID != changeJobFileID)
-                    {
-                        isChangeFile = true;
-                    }
-                }
-                catch(...)
-                {
-                    LOGE("error:job_name is not int");
-                }
-            }
-            //执行切换
-            if(isChangeFile)
-            {
-                QString job_path = QString(job_root_path + "/" + std::to_string(changeJobFileID).data() + ".data");
-                if(!QFile(job_path).exists())
-                {
-                    QMetaObject::invokeMethod(this, [stringInfo = std::to_string(changeJobFileID).data(), ui = this]()
-                    {
-                        QMessageBox::warning(ui, "警告.", "作业还没创建，请先创建作业： " + QString(stringInfo), QMessageBox::StandardButton::Ok);
-                    }, Qt::QueuedConnection);
-                }
-                else
-                {
-                    changeFileSignal(std::to_string(changeJobFileID));
-                }
-            }
-
-            ///触发取像
-            int val = 0;
-            plcToyopuc->readInt(IOPara["check"], val);
-            if(val == 1)
-            {
-                //复位信号
-                val = 0;
-                plcToyopuc->writeInt(IOPara["check"], val);
-                //拍照
-                checkCamSignal(0, 0);
-            }
-
 
         }
         else
@@ -684,6 +704,7 @@ void MainWindow::plcInfoUpdateEven()
                 QString styleSheetPushButton = QString("QPushButton{background-color: #bd3124;border-radius:10px;}");
                 pushButton->setStyleSheet(styleSheetPushButton);
             }, Qt::QueuedConnection);
+
         }
 
     }
@@ -1568,7 +1589,7 @@ void MainWindow::remove_update_display_img_event()
 void MainWindow::regRobotEvent()
 {
     removeRobotEvent();
-    // connect(&communication, &Communication::checkCamSignal, this, &MainWindow::changeFileAndCheckCam);
+    connect(&communication, &Communication::checkCamSignal, this, &MainWindow::changeFileAndCheckCam);
     // connect(&communication, &Communication::focusingSignal, &jobmanager, &JobManager::focusingCam);
     // connect(&communication, &Communication::calibrationSignal, &jobmanager, &JobManager::calibrationCam);
     //仿真测试
@@ -1578,7 +1599,7 @@ void MainWindow::regRobotEvent()
 
 void MainWindow::removeRobotEvent()
 {
-    // disconnect(&communication, &Communication::checkCamSignal, this, &MainWindow::changeFileAndCheckCam);
+    disconnect(&communication, &Communication::checkCamSignal, this, &MainWindow::changeFileAndCheckCam);
     // disconnect(&communication, &Communication::focusingSignal, &jobmanager, &JobManager::focusingCam);
     // disconnect(&communication, &Communication::calibrationSignal, &jobmanager, &JobManager::calibrationCam);
     // disconnect(&communication, &Communication::calibrationSignal, this, &MainWindow::calibrationCamTest);
@@ -2028,13 +2049,13 @@ void MainWindow::on_actioncam_setting_triggered()
 void MainWindow::on_actionoutput_setting_triggered()
 {
     LOGE("111");
-    // //关闭socket服务器
-    // communication.tcp_server_dispose();
+    //关闭socket服务器
+    communication.tcp_server_dispose();
     // //关闭机器人通讯
     // communicationModbus.modbusDisconnect();
-    //关闭plc通讯
-    plcToyopuc->disconnect();
-    LOGE("222");
+    // //关闭plc通讯
+    // plcToyopuc->disconnect();
+    // LOGE("222");
 
     communicationCOM.disconnect();
     LOGE("333");
@@ -2050,21 +2071,25 @@ void MainWindow::on_actionoutput_setting_triggered()
     dialog->exec();
     LOGE("444");
 
+    //保存tcp参数
+    communication.plc_ip = plcIPAddress.toStdString();
+    communication.net_port = port;
+
     // 保存通讯参数
     writeCommunicationPara();
     // 保存通讯参数
     writeIOPara();
 
-    // // tcp通讯初始化
-    // communication.tcp_server_init();
+    // tcp通讯初始化
+    communication.tcp_server_init();
 
     // //机器人通讯
     // std::string msg;
     // communicationModbus.modbusConnect(communicationModbus.plc_ip, communicationModbus.net_port, msg);
 
     communicationCOM.connect();
-    //连接plc
-    plcToyopuc->connectToPLC(plcIPAddress, port);
+    // //连接plc
+    // plcToyopuc->connectToPLC(plcIPAddress, port);
 
 }
 
@@ -2374,39 +2399,52 @@ void MainWindow::job_result_output(int work_id)
 
 
         //发结果给plc
-        {
-            int val;
-            if(jobmanager.result())
-            {
-                val = 1;
-            }
-            else
-            {
-                val = 2;
-            }
-            LOGE("start Write to PLC D%d :%d", IOPara["detResult"], val);
-            if(plcToyopuc != nullptr && plcToyopuc->isConnected())
-            {
-                int res = plcToyopuc->writeInt(IOPara["detResult"], val);
-                LOGE("WriteInt rt :%d", res);
+        // {
+        //     int val;
+        //     if(jobmanager.result())
+        //     {
+        //         val = 1;
+        //     }
+        //     else
+        //     {
+        //         val = 2;
+        //     }
+        //     LOGE("start Write to PLC D%d :%d", IOPara["detResult"], val);
+        //     if(plcToyopuc != nullptr && plcToyopuc->isConnected())
+        //     {
+        //         int res = plcToyopuc->writeInt(IOPara["detResult"], val);
+        //         LOGE("WriteInt rt :%d", res);
 
-            }
-        }
+        //     }
+        // }
 
-        //取像完成
-        //发给plc
+        // //取像完成
+        // //发给plc
+        // {
+        //     int val;
+        //     val = 1;
+
+        //     LOGE("start Write to PLC D%d :%d", IOPara["detFinish"], val);
+        //     if(plcToyopuc != nullptr && plcToyopuc->isConnected())
+        //     {
+        //         int res = plcToyopuc->writeInt(IOPara["detFinish"], val);
+        //         LOGE("WriteInt rt :%d", res);
+
+        //     }
+        // }
+
+        int val;
+        if(jobmanager.result())
         {
-            int val;
             val = 1;
-
-            LOGE("start Write to PLC D%d :%d", IOPara["detFinish"], val);
-            if(plcToyopuc != nullptr && plcToyopuc->isConnected())
-            {
-                int res = plcToyopuc->writeInt(IOPara["detFinish"], val);
-                LOGE("WriteInt rt :%d", res);
-
-            }
         }
+        else
+        {
+            val = 2;
+        }
+        std::string info =  val + "," + job_name.toStdString() + ",1,0,0,0,0,0,0,";
+        communication.tcp_send(info);
+
 
     }
     catch(cv::Exception &e)
@@ -3383,9 +3421,11 @@ void MainWindow::changeFileAndCheckCam(int cam_id, int worker_id, std::string fi
     //切换作业
     if(job_name.toStdString().compare(fileName) != 0)
     {
+        LOGE("start changeFile")
         changeFile(fileName);
     }
     //取像运行
+    LOGE("start CheckCam")
     CheckCam(cam_id, worker_id);
 
 }

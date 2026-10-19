@@ -18,6 +18,8 @@ public:
     //plc 通讯 port
     int net_port = 9094;
 
+    bool isConnected = false;
+
 
 
     //网络socket通信
