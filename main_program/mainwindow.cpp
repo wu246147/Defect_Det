@@ -2442,7 +2442,7 @@ void MainWindow::job_result_output(int work_id)
         {
             val = 2;
         }
-        std::string info =  val + "," + job_name.toStdString() + ",1,0,0,0,0,0,0,";
+        std::string info =  std::to_string(val) + "," + job_name.toStdString() + ",1,0,0,0,0,0,0,";
         communication.tcp_send(info);
 
 
