@@ -332,11 +332,11 @@ void JobWorker::init()
 
     if(detSegModel != nullptr)
     {
-        RaivasSeg_Destroy(detSegModel);
+        RaivasDet_Destroy(detSegModel);
     }
-    detSegModel = RaivasSeg_Create();
+    detSegModel = RaivasDet_Create();
 
-    int rt = RaivasSeg_Init(detSegModel, modelPath.c_str(), 0.5, 1280, false);
+    int rt = RaivasDet_Init(detSegModel, modelPath.c_str(), 0.5, 1280, false);
 
     LOGE("rt :%d", rt);
 
@@ -547,8 +547,8 @@ void JobWorker::runDefectDetTool(cv::Mat img)
 
         if(!img.empty() && detSegModel != nullptr)
         {
-            std::vector<DetectSegResult> results;
-            LOGE("start RaivasSeg_Detect");
+            std::vector<DetectDetResult> results;
+            LOGE("start RaivasDet_Detect");
 
             cv::Mat processImg;
             int ch = img.channels();
@@ -584,7 +584,7 @@ void JobWorker::runDefectDetTool(cv::Mat img)
                 cv::cvtColor(processImg, processImg, cv::COLOR_GRAY2BGR);
             }
 
-            RaivasSeg_Detect(detSegModel, &processImg, &results);
+            RaivasDet_Detect(detSegModel, &processImg, &results);
             LOGE("defect det result len:%d", results.size());
             for(int i = 0; i < results.size(); ++i)
             {

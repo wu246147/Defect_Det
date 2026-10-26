@@ -30,7 +30,7 @@
 #include "imgprocesstool.h"
 #include "calipertool.h"
 #include "shapematch.h"
-#include "yolosegonnx.h"
+#include "yolodetonnx.h"
 
 //相机库
 #include "MvCamera.h"
@@ -383,7 +383,8 @@ public:
     cv::Mat img;
     // cv::Mat train_img;
 
-    RaivasSegHandle detSegModel = nullptr;
+    // RaivasSegHandle detSegModel = nullptr;
+    RaivasDetHandle detSegModel = nullptr;
 
     //定位检测结果
     //转换矩阵结果
@@ -516,7 +517,7 @@ public:
 
 
     //缺陷检测结果
-    std::vector<DetectSegResult> defectDetResults;
+    std::vector<DetectDetResult> defectDetResults;
 
 
 
