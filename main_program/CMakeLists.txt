@@ -62,6 +62,29 @@ file(GLOB ALGORITHM_LIBS "${LIB_DIR}/algorithm/*.lib")
 # include_directories(${PROJECT_SOURCE_DIR}/../include/S7)
 file(GLOB S7_LIBS "${LIB_DIR}/S7/*.lib")
 
+# 使用新库的源码编译，保证与主程序使用相同的 OpenCV、ONNX Runtime 和 C++ 运行库。
+set(ANOMALY_ONNX_ROOT "E:/code/study/qt/opencv_onnxruntime" CACHE PATH "异常检测库源码目录")
+if(NOT EXISTS "${ANOMALY_ONNX_ROOT}/dinomalyonnx.h")
+    message(FATAL_ERROR "未找到异常检测库，请设置 ANOMALY_ONNX_ROOT 为 opencv_onnxruntime 目录。")
+endif()
+add_library(opencv_onnx_anomaly_lib SHARED
+    "${ANOMALY_ONNX_ROOT}/anomalyonnx.cpp"
+    "${ANOMALY_ONNX_ROOT}/anomalymodels.cpp"
+)
+target_include_directories(opencv_onnx_anomaly_lib PUBLIC "${ANOMALY_ONNX_ROOT}")
+target_compile_definitions(opencv_onnx_anomaly_lib PRIVATE ANOMALYONNX_EXPORTS NOMINMAX)
+set_target_properties(opencv_onnx_anomaly_lib PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
+target_link_libraries(opencv_onnx_anomaly_lib PRIVATE ${OPENCV_LIBS} ${ORT_LIB})
+
+add_library(defect_anomaly STATIC algorithm/defectanomaly.h algorithm/defectanomaly.cpp)
+set_target_properties(defect_anomaly PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
+target_include_directories(defect_anomaly PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/algorithm")
+target_link_libraries(defect_anomaly PUBLIC opencv_onnx_anomaly_lib ${OPENCV_LIBS} ${ORT_LIB})
+if(MSVC)
+    target_compile_options(opencv_onnx_anomaly_lib PRIVATE /utf-8)
+    target_compile_options(defect_anomaly PRIVATE /utf-8)
+endif()
+
 add_executable(Defect_Det
     main.cpp
     ./algorithm/qtstreambuf.cpp
@@ -134,6 +157,49 @@ message(OPENCV_LIBS:${OPENCV_LIBS})
 
 target_link_libraries(Defect_Det Qt5::Widgets Qt5::Xml Qt5::Concurrent Qt5::Network Qt5::SerialBus Qt5::SerialPort)
 target_link_libraries(Defect_Det ${BOOST_LIBS} ${OPENCV_LIBS} ${ALGORITHM_LIBS} ${S7_LIBS} ${ORT_LIB})
+target_link_libraries(Defect_Det defect_anomaly)
+
+# 模型与运行库随程序部署，运行时使用程序目录下的固定模型路径。
+set(DINOMALY_MODEL_FILE "${ANOMALY_ONNX_ROOT}/data/anomaly/dinomaly.onnx" CACHE FILEPATH "已导出的 Dinomaly ONNX 模型")
+if(EXISTS "${DINOMALY_MODEL_FILE}")
+    add_custom_command(TARGET Defect_Det POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:Defect_Det>/model"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${DINOMALY_MODEL_FILE}"
+            "$<TARGET_FILE_DIR:Defect_Det>/model/dinomaly.onnx" VERBATIM)
+else()
+    message(WARNING "未找到 Dinomaly 模型，请将已导出的模型放到程序目录 model/dinomaly.onnx。")
+endif()
+if(WIN32)
+    # 工程现有链接库包含两个 OpenCV 版本，新库用到的 DNN 符号还依赖 4.8 运行库。
+    file(GLOB OPENCV_RUNTIME_DLLS "${LIB_DIR}/opencv/*.dll")
+    add_custom_command(TARGET opencv_onnx_anomaly_lib POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${OPENCV_RUNTIME_DLLS}
+            "$<TARGET_FILE_DIR:opencv_onnx_anomaly_lib>" COMMAND_EXPAND_LISTS VERBATIM)
+    add_custom_command(TARGET Defect_Det POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ORT_ROOT}/lib/onnxruntime.dll"
+            "$<TARGET_FILE_DIR:Defect_Det>" VERBATIM)
+endif()
+
+option(DEFECT_ANOMALY_BUILD_TESTS "构建异常检测分段、筛选及真实模型验证" OFF)
+if(DEFECT_ANOMALY_BUILD_TESTS)
+    enable_testing()
+    add_executable(defect_anomaly_tests tests/defect_anomaly_tests.cpp)
+    set_target_properties(defect_anomaly_tests PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
+    target_link_libraries(defect_anomaly_tests PRIVATE defect_anomaly)
+    if(MSVC)
+        target_compile_options(defect_anomaly_tests PRIVATE /utf-8)
+    endif()
+    add_test(NAME defect_anomaly_regions COMMAND defect_anomaly_tests)
+    if(EXISTS "${DINOMALY_MODEL_FILE}")
+        add_test(NAME defect_anomaly_dinomaly COMMAND defect_anomaly_tests "${DINOMALY_MODEL_FILE}"
+            "${ANOMALY_ONNX_ROOT}/data/anomaly/sample_anomaly.png")
+    endif()
+    if(WIN32)
+        add_custom_command(TARGET defect_anomaly_tests POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ORT_ROOT}/lib/onnxruntime.dll"
+                "$<TARGET_FILE_DIR:defect_anomaly_tests>" VERBATIM)
+    endif()
+endif()
 
 # 文件打包
 file(COPY ${PROJECT_SOURCE_DIR}/qss DESTINATION ${PROJECT_BINARY_DIR})

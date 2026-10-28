@@ -1,5 +1,7 @@
 ﻿#include "jobworker.h"
 #include "QDeBug"
+#include <QCoreApplication>
+#include <stdexcept>
 
 template <typename T>
 std::string to_string_with_precision(const T a_value, const int n = 6)
@@ -315,33 +317,30 @@ JobWorker::JobWorker(int &id)
 
 void JobWorker::init()
 {
-    // if(is_train)
-    // {
-    //     if(cam_id == 0)
-    //     {
-    //         is_train = true;
-    //     }
-    //     else
-    //     {
-    //         train_location();
-    //     }
-
-    // }
-    std::string modelPath = "model/Det_model.onnx";
-    LOGE("start init SupervisedModel");
-
-    if(detSegModel != nullptr)
+    defectAnomalyModel.reset();
+    defectDetResults.clear();
+    defectDetResult = false;
+    const std::string modelPath = QDir(QCoreApplication::applicationDirPath())
+                                     .filePath("model/dinomaly.onnx").toUtf8().toStdString();
+    LOGE(u8"开始初始化 Dinomaly 模型：%s", modelPath.c_str());
+    try
     {
-        RaivasDet_Destroy(detSegModel);
+        auto model = std::make_unique<DinomalyOnnx>();
+        // 库生成的可视化使用默认阈值；实际缺陷筛选每次读取 defectDetThre，无需重载模型。
+        const int status = model->init(modelPath.c_str(), 0.5f, false);
+        if(status != 0)
+        {
+            LOGE_HIGH(u8"Dinomaly 初始化失败：%s", model->lastError().c_str());
+            return;
+        }
+        const auto info = model->modelInfo();
+        LOGE(u8"Dinomaly 初始化完成，网络尺寸：%d x %d", info.networkSize.width, info.networkSize.height);
+        defectAnomalyModel = std::move(model);
     }
-    detSegModel = RaivasDet_Create();
-
-    int rt = RaivasDet_Init(detSegModel, modelPath.c_str(), 0.5, 1280, false);
-
-    LOGE("rt :%d", rt);
-
-    LOGE("finish init SupervisedModel");
-
+    catch(const std::exception& error)
+    {
+        LOGE_HIGH(u8"Dinomaly 初始化异常：%s", error.what());
+    }
 }
 
 void JobWorker::acqfifo_complete(cv::Mat tmp_img)
@@ -537,118 +536,60 @@ void JobWorker::runShapeMatch(cv::Mat img)
 
 void JobWorker::runDefectDetTool(cv::Mat img)
 {
-    defectDetResult = true;
+    // 默认失败，只有全部切块推理并完成筛选后才允许判定为合格。
+    defectDetResult = false;
     defectDetResults.clear();
-    //
-
+    const auto start = std::chrono::steady_clock::now();
     try
     {
-        auto start = std::chrono::high_resolution_clock::now();
-
-        if(!img.empty() && detSegModel != nullptr)
+        if(!defectAnomalyModel)
         {
-            std::vector<DetectDetResult> results;
-            LOGE("start RaivasDet_Detect");
-
-            cv::Mat processImg;
-            int ch = img.channels();
-
-            if(ch == 4)
-            {
-                // BGRA → BGR
-                cv::cvtColor(img, processImg, cv::COLOR_BGRA2BGR);
-            }
-            else if(ch == 3)
-            {
-                // 已经是3通道，直接拷贝
-                processImg = img.clone();
-            }
-            else if(ch == 1)
-            {
-                // 灰度 → BGR
-                cv::cvtColor(img, processImg, cv::COLOR_GRAY2BGR);
-            }
-            else if(ch == 2)
-            {
-                // 2通道比较少见，先转灰度再转BGR
-                cv::Mat temp;
-                cv::cvtColor(img, temp, cv::COLOR_BGR5652BGR); // 或按需处理
-                processImg = temp;
-            }
-            else
-            {
-                // fallback：强制reshape
-                std::vector<cv::Mat> channels(ch);
-                cv::split(img, channels);
-                processImg = channels[0]; // 取第一个通道
-                cv::cvtColor(processImg, processImg, cv::COLOR_GRAY2BGR);
-            }
-
-            RaivasDet_Detect(detSegModel, &processImg, &results);
-            LOGE("defect det result len:%d", results.size());
-            for(int i = 0; i < results.size(); ++i)
-            {
-                LOGE("defect det result score:%f", results[i].score);
-                LOGE("defect det result area:%f", results[i].box.area());
-                //范围筛选
-                if(!defectSelectBox.contains(cv::Point(results[i].box.x + results[i].box.width / 2, results[i].box.y + results[i].box.height / 2)))
-                {
-                    continue;
-                }
-
-                //阈值筛选
-                if(results[i].score < defectDetThre || results[i].box.area() < defectAreaThre)
-                {
-                    continue;
-                }
-
-                defectDetResults.push_back(results[i]);
-            }
-
-
-
-
-
-            if(defectDetResults.size() > 0)
-            {
-                defectDetResult = false;
-            }
+            throw std::runtime_error(u8"Dinomaly 模型未成功初始化，请检查模型路径及初始化日志。");
         }
-        else
+        LOGE(u8"开始 Dinomaly 选区分段检测，选区：%d,%d,%d,%d，像素阈值：%f，框面积阈值：%d",
+             defectSelectBox.x, defectSelectBox.y, defectSelectBox.width, defectSelectBox.height,
+             defectDetThre, defectAreaThre);
+        defectDetResults = DefectAnomaly::detect(*defectAnomalyModel, img, defectSelectBox,
+                                                defectDetThre, defectAreaThre);
+        defectDetResult = defectDetResults.empty();
+        LOGE(u8"异常缺陷数量：%d", static_cast<int>(defectDetResults.size()));
+        for(const auto& result : defectDetResults)
         {
-            LOGE("img.empty() or detSegModel is nullptr");
-
+            LOGE(u8"异常最低分数：%f，外接框面积：%f", result.score, result.box.area());
         }
-
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-
-        LOGE("Defect total: %lld ms", duration);
-        LOGE("-----------------------------------");
-
-
     }
     catch(cv::Exception &e)
     {
         locationResult = false;
-        LOGE_HIGH(e.what());
-    }
-    catch(std::exception &e)
-    {
-        locationResult = false;
-        LOGE_HIGH(e.what());
+        defectDetResult = false;
+        defectDetResults.clear();
+        LOGE_HIGH("%s", e.what());
     }
     catch(QException &e)
     {
         locationResult = false;
-        LOGE_HIGH(e.what());
+        defectDetResult = false;
+        defectDetResults.clear();
+        LOGE_HIGH("%s", e.what());
+    }
+    catch(std::exception &e)
+    {
+        locationResult = false;
+        defectDetResult = false;
+        defectDetResults.clear();
+        LOGE_HIGH("%s", e.what());
     }
     catch(...)
     {
         locationResult = false;
-        LOGE_HIGH("other error.");
+        defectDetResult = false;
+        defectDetResults.clear();
+        LOGE_HIGH(u8"Dinomaly 异常检测发生未知错误。");
     }
-
+    const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - start).count();
+    LOGE("Defect total: %lld ms", static_cast<long long>(duration));
+    LOGE("-----------------------------------");
 }
 
 

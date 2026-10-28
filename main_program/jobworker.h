@@ -31,6 +31,7 @@
 #include "calipertool.h"
 #include "shapematch.h"
 #include "yolodetonnx.h"
+#include "algorithm/defectanomaly.h"
 
 //相机库
 #include "MvCamera.h"
@@ -369,7 +370,7 @@ public:
     ///输出结果
     int resultType = 0; //0为像素坐标，1为实际坐标，2为相对标准位置坐标
 
-    //缺陷检测参数
+    // 缺陷检测参数：归一化异常像素阈值，以及缺陷最小外接框面积。
     double defectDetThre = 0.5;
     int defectAreaThre = 100;
 
@@ -383,8 +384,8 @@ public:
     cv::Mat img;
     // cv::Mat train_img;
 
-    // RaivasSegHandle detSegModel = nullptr;
-    RaivasDetHandle detSegModel = nullptr;
+    // 每个作业独立持有模型，析构或重新初始化时自动释放推理资源。
+    std::unique_ptr<DinomalyOnnx> defectAnomalyModel;
 
     //定位检测结果
     //转换矩阵结果
@@ -568,7 +569,8 @@ signals:
 public:
 
     ///
-    /// \brief init 相机作业初始化函数
+    /// \brief init 加载程序目录 model/dinomaly.onnx，初始化本作业的 CPU 异常检测模型。
+    /// 初始化失败时清空模型并记录错误，后续检测按不合格处理。
     ///
     void init();
 
@@ -1118,7 +1120,8 @@ public:
     void runCaliperTool(cv::Mat img);
 
     ///
-    /// \brief runDefectDetTool
+    /// \brief runDefectDetTool 仅对选区裁剪图分段异常检测，合并后输出整图坐标的缺陷框及最低分数。
+    /// \param img 原始八位图像，不修改像素；空图、无效选区或推理失败时检测结果为不合格。
     ///
     void runDefectDetTool(cv::Mat img);
 

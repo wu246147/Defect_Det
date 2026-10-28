@@ -68,14 +68,17 @@
           <item row="0" column="0">
            <widget class="QLabel" name="label_2">
             <property name="text">
-             <string>置信度阈值</string>
+             <string>异常像素阈值</string>
             </property>
            </widget>
           </item>
           <item row="0" column="1">
            <widget class="QDoubleSpinBox" name="doubleSpinBox_object_detect_thre">
+            <property name="toolTip">
+             <string>仅保留分数严格大于此值的异常像素（0～1）；数值越大，筛选越严格。</string>
+            </property>
             <property name="minimum">
-             <double>0.250000000000000</double>
+             <double>0.000000000000000</double>
             </property>
             <property name="maximum">
              <double>1.000000000000000</double>
@@ -85,7 +88,7 @@
           <item row="1" column="0">
            <widget class="QLabel" name="label_3">
             <property name="text">
-             <string>缺陷面积阈值</string>
+             <string>缺陷外接框面积阈值</string>
             </property>
            </widget>
           </item>
