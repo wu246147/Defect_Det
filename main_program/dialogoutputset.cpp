@@ -1,4 +1,4 @@
-#include "dialogoutputset.h"
+﻿#include "dialogoutputset.h"
 #include "ui_dialogoutputset.h"
 #include "qDebug"
 

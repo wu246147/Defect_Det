@@ -1,4 +1,4 @@
-// toyopuc.cpp —— 完全不用改，保持你原来的实现
+﻿// toyopuc.cpp —— 完全不用改，保持你原来的实现
 #include "toyopuc.h"
 #include <QDebug>
 #include <cstring>

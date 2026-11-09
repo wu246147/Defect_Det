@@ -156,132 +156,28 @@ void DialogToolPara::update_train_roi()
             QPointF center_point;
             qreal w, h, angle;
             //同步train_roi
+            this->myRectItem_location->getRectPara(&center_point, &angle, &w, &h);
+            jobmanager->jobworkers[cam_id].shapeMatchROI.center.x =  center_point.x();
+            jobmanager->jobworkers[cam_id].shapeMatchROI.center.y =  center_point.y();
+
+            jobmanager->jobworkers[cam_id].shapeMatchROI.size.width = w;
+            jobmanager->jobworkers[cam_id].shapeMatchROI.size.height = h;
+
+        }
+        //缺陷检测
+        {
+            //只保存搜索区域参数，训练区域只有点击训练后，才会保存
+            //框参数保存
+            QPointF center_point;
+            qreal w, h, angle;
+            //同步train_roi
             this->myRectItem_select->getRectPara(&center_point, &angle, &w, &h);
             jobmanager->jobworkers[cam_id].defectSelectBox.x = center_point.x() - w / 2;
             jobmanager->jobworkers[cam_id].defectSelectBox.y = center_point.y() - h / 2;
             jobmanager->jobworkers[cam_id].defectSelectBox.width = w;
             jobmanager->jobworkers[cam_id].defectSelectBox.height = h;
 
-            LOGE("X:%f", jobmanager->jobworkers[cam_id].defectSelectBox.x);
-            LOGE("Y:%f", jobmanager->jobworkers[cam_id].defectSelectBox.y);
-            LOGE("W:%f", jobmanager->jobworkers[cam_id].defectSelectBox.width);
-            LOGE("H:%f", jobmanager->jobworkers[cam_id].defectSelectBox.height);
-
         }
-        // {
-        //     //只保存搜索区域参数，训练区域只有点击训练后，才会保存
-        //     //框参数保存
-        //     QPointF center_point;
-        //     qreal w, h, angle;
-        //     //同步train_roi
-        //     this->myRectItem_center->getRectPara(&center_point, &angle, &w, &h);
-        //     jobmanager->jobworkers[cam_id].center_box.x = center_point.x() - w / 2;
-        //     jobmanager->jobworkers[cam_id].center_box.y = center_point.y() - h / 2;
-        //     jobmanager->jobworkers[cam_id].center_box.width = w;
-        //     jobmanager->jobworkers[cam_id].center_box.height = h;
-        // }
-        // {
-        //     //只保存搜索区域参数，训练区域只有点击训练后，才会保存
-        //     //框参数保存
-        //     QPointF center_point;
-        //     qreal w, h, angle;
-        //     //同步train_roi
-        //     this->myRectItem_corner1->getRectPara(&center_point, &angle, &w, &h);
-        //     jobmanager->jobworkers[cam_id].boxes[0].x = center_point.x() - w / 2;
-        //     jobmanager->jobworkers[cam_id].boxes[0].y = center_point.y() - h / 2;
-        //     jobmanager->jobworkers[cam_id].boxes[0].width = w;
-        //     jobmanager->jobworkers[cam_id].boxes[0].height = h;
-        // }
-        // {
-        //     //只保存搜索区域参数，训练区域只有点击训练后，才会保存
-        //     //框参数保存
-        //     QPointF center_point;
-        //     qreal w, h, angle;
-        //     //同步train_roi
-        //     this->myRectItem_corner2->getRectPara(&center_point, &angle, &w, &h);
-        //     jobmanager->jobworkers[cam_id].boxes[1].x = center_point.x() - w / 2;
-        //     jobmanager->jobworkers[cam_id].boxes[1].y = center_point.y() - h / 2;
-        //     jobmanager->jobworkers[cam_id].boxes[1].width = w;
-        //     jobmanager->jobworkers[cam_id].boxes[1].height = h;
-        // }
-        // {
-        //     //只保存搜索区域参数，训练区域只有点击训练后，才会保存
-        //     //框参数保存
-        //     QPointF center_point;
-        //     qreal w, h, angle;
-        //     //同步train_roi
-        //     this->myRectItem_corner3->getRectPara(&center_point, &angle, &w, &h);
-        //     jobmanager->jobworkers[cam_id].boxes[2].x = center_point.x() - w / 2;
-        //     jobmanager->jobworkers[cam_id].boxes[2].y = center_point.y() - h / 2;
-        //     jobmanager->jobworkers[cam_id].boxes[2].width = w;
-        //     jobmanager->jobworkers[cam_id].boxes[2].height = h;
-        // }
-        // {
-        //     //只保存搜索区域参数，训练区域只有点击训练后，才会保存
-        //     //框参数保存
-        //     QPointF center_point;
-        //     qreal w, h, angle;
-        //     //同步train_roi
-        //     this->myRectItem_corner4->getRectPara(&center_point, &angle, &w, &h);
-        //     jobmanager->jobworkers[cam_id].boxes[3].x = center_point.x() - w / 2;
-        //     jobmanager->jobworkers[cam_id].boxes[3].y = center_point.y() - h / 2;
-        //     jobmanager->jobworkers[cam_id].boxes[3].width = w;
-        //     jobmanager->jobworkers[cam_id].boxes[3].height = h;
-        // }
-
-        // {
-
-        //     //只保存搜索区域参数，训练区域只有点击训练后，才会保存
-        //     //框参数保存
-        //     QPointF center_point;
-        //     qreal w, h, angle;
-        //     //同步train_roi
-        //     this->myRectItem_center->getRectPara(&center_point, &angle, &w, &h);
-        //     jobmanager->jobworkers[cam_id].shapeMatchROI.center.x = center_point.x();
-        //     jobmanager->jobworkers[cam_id].shapeMatchROI.center.y = center_point.y();
-        //     jobmanager->jobworkers[cam_id].shapeMatchROI.size.width = w;
-        //     jobmanager->jobworkers[cam_id].shapeMatchROI.size.height = h;
-        //     jobmanager->jobworkers[cam_id].shapeMatchROI.angle = angle;
-
-
-        // }
-        // if(jobmanager->jobworkers[cam_id].is_train)
-        // {
-        //     if(jobmanager->jobworkers[cam_id].locationShapeResult)
-        //     {
-        //         {
-        //             //只保存搜索区域参数，训练区域只有点击训练后，才会保存
-        //             //框参数保存
-        //             QPointF center_point;
-        //             qreal w, h, angle;
-        //             //同步train_roi
-        //             this->myRectItem_caliperTool1->getRectPara(&center_point, &angle, &w, &h);
-        //             jobmanager->jobworkers[cam_id].CaliperTransformROIList[0].center.x = center_point.x();
-        //             jobmanager->jobworkers[cam_id].CaliperTransformROIList[0].center.y = center_point.y();
-        //             jobmanager->jobworkers[cam_id].CaliperTransformROIList[0].size.width = w;
-        //             jobmanager->jobworkers[cam_id].CaliperTransformROIList[0].size.height = h;
-        //             jobmanager->jobworkers[cam_id].CaliperTransformROIList[0].angle = angle;
-
-
-        //         }
-        //         {
-        //             //只保存搜索区域参数，训练区域只有点击训练后，才会保存
-        //             //框参数保存
-        //             QPointF center_point;
-        //             qreal w, h, angle;
-        //             //同步train_roi
-        //             this->myRectItem_caliperTool2->getRectPara(&center_point, &angle, &w, &h);
-        //             jobmanager->jobworkers[cam_id].CaliperTransformROIList[1].center.x = center_point.x();
-        //             jobmanager->jobworkers[cam_id].CaliperTransformROIList[1].center.y = center_point.y();
-        //             jobmanager->jobworkers[cam_id].CaliperTransformROIList[1].size.width = w;
-        //             jobmanager->jobworkers[cam_id].CaliperTransformROIList[1].size.height = h;
-        //             jobmanager->jobworkers[cam_id].CaliperTransformROIList[1].angle = angle;
-        //         }
-
-        //         jobmanager->jobworkers[cam_id].updataCaliperRoiFromTransformCaliperRoi();
-
-        //     }
-        // }
 
 
     }
@@ -420,20 +316,29 @@ void DialogToolPara::show_display()
             // if(cam_id == 1)
             // {
             /// 定位训练框
+            ///
             {
-                LOGE("X:%d", jobmanager->jobworkers[cam_id].defectSelectBox.x);
-                LOGE("Y:%d", jobmanager->jobworkers[cam_id].defectSelectBox.y);
-                LOGE("W:%d", jobmanager->jobworkers[cam_id].defectSelectBox.width);
-                LOGE("H:%d", jobmanager->jobworkers[cam_id].defectSelectBox.height);
 
+
+                QRectF tool_rect(jobmanager->jobworkers[cam_id].shapeMatchROI.center.x - jobmanager->jobworkers[cam_id].shapeMatchROI.size.width / 2,
+                                 jobmanager->jobworkers[cam_id].shapeMatchROI.center.y - jobmanager->jobworkers[cam_id].shapeMatchROI.size.height / 2,
+                                 jobmanager->jobworkers[cam_id].shapeMatchROI.size.width,  jobmanager->jobworkers[cam_id].shapeMatchROI.size.height);
+
+
+                this->myRectItem_location = new MyGraphicRectItem(tool_rect,  0);
+                this->myRectItem_location->setToolTip("locationTrainROI");
+                this->myRectItem_location->SetColor(Qt::blue);
+                this->myRectItem_location->setRotatable(false);
+                jobmanager->jobworkers[cam_id].display->myGraphicsView->addItem(myRectItem_location, true);
+
+            }
+
+            /// 缺陷检测框
+            {
                 QRectF tool_rect(jobmanager->jobworkers[cam_id].defectSelectBox.x,
                                  jobmanager->jobworkers[cam_id].defectSelectBox.y,
                                  jobmanager->jobworkers[cam_id].defectSelectBox.width,  jobmanager->jobworkers[cam_id].defectSelectBox.height);
 
-                // LOGE("X2:%f", tool_rect.x());
-                // LOGE("Y2:%f", tool_rect.y());
-                // LOGE("W2:%f", tool_rect.width());
-                // LOGE("H2:%f", tool_rect.height());
 
                 this->myRectItem_select = new MyGraphicRectItem(tool_rect,  0);
                 this->myRectItem_select->setToolTip("defectSelect");
@@ -442,48 +347,8 @@ void DialogToolPara::show_display()
                 jobmanager->jobworkers[cam_id].display->myGraphicsView->addItem(myRectItem_select, true);
 
 
-                QPointF center_point;
-                qreal w, h, angle;
-                this->myRectItem_select->getRectPara(&center_point, &angle, &w, &h);
-
-                // LOGE("X3:%f", center_point.x());
-                // LOGE("Y3:%f", center_point.y());
-                // LOGE("W3:%f", w);
-                // LOGE("H3:%f", h);
             }
 
-            //             ///卡尺
-            //             if(jobmanager->jobworkers[cam_id].is_train)
-            //             {
-            //                 jobmanager->jobworkers[cam_id].runShapeMatch(jobmanager->jobworkers[cam_id].train_image);
-            //                 if(jobmanager->jobworkers[cam_id].locationShapeResult)
-            //                 {
-            //                     //更新一下映射的卡尺框位置
-            //                     jobmanager->jobworkers[cam_id].updataTransformCaliperRoiFromCaliperRoi();
-
-
-            //                     {
-            //                         QRectF tool_rect(jobmanager->jobworkers[cam_id].CaliperTransformROIList[0].center.x - jobmanager->jobworkers[cam_id].CaliperTransformROIList[0].size.width / 2,
-            //                                          jobmanager->jobworkers[cam_id].CaliperTransformROIList[0].center.y - jobmanager->jobworkers[cam_id].CaliperTransformROIList[0].size.height / 2,
-            //                                          jobmanager->jobworkers[cam_id].CaliperTransformROIList[0].size.width, jobmanager->jobworkers[cam_id].CaliperTransformROIList[0].size.height);
-            //                         this->myRectItem_caliperTool1 = new MyGraphicRectItem(tool_rect, jobmanager->jobworkers[cam_id].CaliperTransformROIList[0].angle);
-            //                         this->myRectItem_caliperTool1->setToolTip("caliper_roi1");
-            //                         this->myRectItem_caliperTool1->SetColor(Qt::green);
-            //                         this->myRectItem_caliperTool1->setRotatable(true);
-            //                         jobmanager->jobworkers[cam_id].display->myGraphicsView->addItem(myRectItem_caliperTool1, true);
-            //                     }
-            //                     {
-            //                         QRectF tool_rect(jobmanager->jobworkers[cam_id].CaliperTransformROIList[1].center.x - jobmanager->jobworkers[cam_id].CaliperTransformROIList[1].size.width / 2,
-            //                                          jobmanager->jobworkers[cam_id].CaliperTransformROIList[1].center.y - jobmanager->jobworkers[cam_id].CaliperTransformROIList[1].size.height / 2,
-            //                                          jobmanager->jobworkers[cam_id].CaliperTransformROIList[1].size.width, jobmanager->jobworkers[cam_id].CaliperTransformROIList[1].size.height);
-            //                         this->myRectItem_caliperTool2 = new MyGraphicRectItem(tool_rect, jobmanager->jobworkers[cam_id].CaliperTransformROIList[1].angle);
-            //                         this->myRectItem_caliperTool2->setToolTip("caliper_roi2");
-            //                         this->myRectItem_caliperTool2->SetColor(Qt::green);
-            //                         this->myRectItem_caliperTool2->setRotatable(true);
-            //                         jobmanager->jobworkers[cam_id].display->myGraphicsView->addItem(myRectItem_caliperTool2, true);
-            //                     }
-            //                 }
-            //             }
 
         }
         // }
@@ -573,32 +438,32 @@ void DialogToolPara::on_pushButton_train_clicked()
         return;
     }
     update_train_roi();
-    if(cam_id == 0)
+    // if(cam_id == 0)
+    // {
+    //     jobmanager->jobworkers[cam_id].is_train = true;
+    //     //显示图像处理效果
+    //     jobmanager->jobworkers[cam_id].show_chips_contour();
+    //     QMessageBox::warning(this, "训练成功.", "训练成功.", QMessageBox::StandardButton::Ok);
+    // }
+    // else
+    // {
+    // jobmanager->jobworkers[cam_id].is_train = true;
+    jobmanager->jobworkers[cam_id].train_location();
+    if(jobmanager->jobworkers[cam_id].is_train)
     {
-        jobmanager->jobworkers[cam_id].is_train = true;
-        //显示图像处理效果
-        jobmanager->jobworkers[cam_id].show_chips_contour();
+        //显示定位效果
+        jobmanager->jobworkers[cam_id].show_train_model();
+
+        //重新定位一下，刷新一下卡尺ROI
+        jobmanager->jobworkers[cam_id].runShapeMatch(jobmanager->jobworkers[cam_id].train_image);
+        show_display();
         QMessageBox::warning(this, "训练成功.", "训练成功.", QMessageBox::StandardButton::Ok);
     }
     else
     {
-        // jobmanager->jobworkers[cam_id].is_train = true;
-        jobmanager->jobworkers[cam_id].train_location();
-        if(jobmanager->jobworkers[cam_id].is_train)
-        {
-            //显示定位效果
-            jobmanager->jobworkers[cam_id].show_train_model();
-
-            //重新定位一下，刷新一下卡尺ROI
-            jobmanager->jobworkers[cam_id].runLocation(jobmanager->jobworkers[cam_id].train_image);
-            show_display();
-            QMessageBox::warning(this, "训练成功.", "训练成功.", QMessageBox::StandardButton::Ok);
-        }
-        else
-        {
-            QMessageBox::warning(this, "训练失败.", "训练失败.", QMessageBox::StandardButton::Ok);
-        }
+        QMessageBox::warning(this, "训练失败.", "训练失败.", QMessageBox::StandardButton::Ok);
     }
+    // }
 
 }
 
@@ -609,6 +474,7 @@ void DialogToolPara::updata_control_value()
     ui->groupBox->setVisible(false);
     ui->groupBox_run->setVisible(false);
     ui->groupBox_train->setVisible(false);
+    ui->widget_3->setVisible(work_mode == 0);
 
     ui->pushButton_run_last->setVisible(false);
     ui->pushButton_run_next->setVisible(false);
@@ -660,6 +526,10 @@ void DialogToolPara::updata_control_value()
 
     // ui->doubleSpinBox_distance_thre_min->setValue(jobmanager->distance_thre_min);
     // ui->doubleSpinBox_distance_thre_max->setValue(jobmanager->distance_thre_max);
+
+    ui->spinBox_location_low_threshold->setValue(jobmanager->jobworkers[cam_id].LowThreshold);
+    ui->spinBox_location_high_threshold->setValue(jobmanager->jobworkers[cam_id].HighThreshold);
+    ui->doubleSpinBox_location_min_score->setValue(jobmanager->jobworkers[cam_id].MinScore);
 
     ui->doubleSpinBox_object_detect_thre->setValue(jobmanager->jobworkers[cam_id].defectDetThre);
     ui->spinBox_defect_area_thre->setValue(jobmanager->jobworkers[cam_id].defectAreaThre);
@@ -779,22 +649,22 @@ void DialogToolPara::on_comboBox_type_currentIndexChanged(int index)
 void DialogToolPara::get_show_img()
 {
     exist_show_img = false;
-    // if(work_mode == 1)
-    // {
-    //     if(!jobmanager->jobworkers[cam_id].train_image.empty())
-    //     {
-    //         exist_show_img = true;
-    //         show_img = jobmanager->jobworkers[cam_id].train_image;
-    //     }
-    // }
-    // else if(work_mode == 0)
-    // {
-    if(!jobmanager->jobworkers[cam_id].img.empty())
+    if(work_mode == 1)
     {
-        exist_show_img = true;
-        show_img = jobmanager->jobworkers[cam_id].img;
+        if(!jobmanager->jobworkers[cam_id].train_image.empty())
+        {
+            exist_show_img = true;
+            show_img = jobmanager->jobworkers[cam_id].train_image;
+        }
     }
-    // }
+    else if(work_mode == 0)
+    {
+        if(!jobmanager->jobworkers[cam_id].img.empty())
+        {
+            exist_show_img = true;
+            show_img = jobmanager->jobworkers[cam_id].img;
+        }
+    }
 }
 
 void DialogToolPara::change_roi_even(QGraphicsItem *item)
@@ -1217,6 +1087,36 @@ void DialogToolPara::on_spinBox_defect_area_thre_valueChanged(int arg1)
         return;
     }
     jobmanager->jobworkers[cam_id].defectAreaThre = arg1;
+}
+
+
+void DialogToolPara::on_spinBox_location_low_threshold_valueChanged(int arg1)
+{
+    if(is_loading)
+    {
+        return;
+    }
+    jobmanager->jobworkers[cam_id].LowThreshold = arg1;
+}
+
+
+void DialogToolPara::on_spinBox_location_high_threshold_valueChanged(int arg1)
+{
+    if(is_loading)
+    {
+        return;
+    }
+    jobmanager->jobworkers[cam_id].HighThreshold = arg1;
+}
+
+
+void DialogToolPara::on_doubleSpinBox_location_min_score_valueChanged(double arg1)
+{
+    if(is_loading)
+    {
+        return;
+    }
+    jobmanager->jobworkers[cam_id].MinScore = static_cast<float>(arg1);
 }
 
 

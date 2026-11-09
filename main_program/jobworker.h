@@ -696,9 +696,18 @@ public:
     void updataCaliperRoiFromTransformCaliperRoi();
 
 
-    ///
-    /// 保存参数，每次添加保存参数后，都要更新该函数
-    ///
+    /**
+     * @brief 按既有的字段名称和值协议保存或加载相机作业参数。
+     * @details 保存时依次写入参数并以 JobWorkerEnd 结束；加载时按字段名恢复对象状态，
+     * 包括定位训练阈值和最低匹配分数。旧作业未包含 MinScore 时保留对象当前值，新对象默认为 0.5。
+     * @tparam Archive 支持 Boost.Serialization 读写、is_saving 和 is_loading 标记的归档类型。
+     * @param ar 调用方持有的有效归档引用；保存时接收字段数据，加载时提供字段数据。
+     * 调用期间归档及其底层流必须保持有效，流资源由调用方管理。
+     * @param version Boost 传入的类版本号；当前实现按字段名兼容旧作业，不使用此值分支。
+     * @note 加载会修改当前对象，调用方须避免与采集、检测及界面参数修改并发执行。
+     * 保留现有异常处理：保存异常向调用方传播；加载时遇到归档异常则记录日志并终止读取，
+     * 已读取的字段不会回滚；未知字段按现有逻辑记录日志并尝试将其值作为字符串跳过。
+     */
     template<class Archive>
     void serialize(Archive &ar, const unsigned int version)
     {
@@ -803,6 +812,9 @@ public:
             name = "MinContrast";
             ar &name;
             ar &MinContrast;
+            name = "MinScore";
+            ar &name;
+            ar &MinScore;
 
 
             /// 标定参数
@@ -1004,6 +1016,10 @@ public:
                     else if(name.compare("MinContrast") == 0)
                     {
                         ar &MinContrast;
+                    }
+                    else if(name.compare("MinScore") == 0)
+                    {
+                        ar &MinScore;
                     }
 
 

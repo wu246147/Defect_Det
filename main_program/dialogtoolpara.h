@@ -101,6 +101,14 @@ public:
     void get_show_img();
 
 
+    /**
+     * @brief 根据当前相机和工作模式刷新参数控件及面板可见性。
+     * @details 运行模式显示运行参数和仿真面板，训练模式显示训练参数并隐藏仿真面板。
+     * 回填当前相机的定位、缺陷检测参数和仿真路径时，通过 is_loading 阻止槽函数反写参数，
+     * 最后刷新仿真图片列表并重置其选中状态。
+     * @note 仅在界面线程调用；jobmanager 必须有效，cam_id 必须指向已有作业。
+     * 本函数会修改控件状态，但不会自动保存作业或重新训练定位模型。
+     */
     void updata_control_value();
 
     ///
@@ -193,6 +201,30 @@ private slots:
     void on_doubleSpinBox_object_detect_thre_valueChanged(double arg1);
 
     void on_spinBox_defect_area_thre_valueChanged(int arg1);
+
+    /**
+     * @brief 将训练参数框中的定位低阈值写入当前相机作业。
+     * @details 回填控件期间直接返回；用户调整时只更新 LowThreshold，供下次定位训练使用。
+     * @param arg1 控件提供的低阈值，无量纲整数，界面允许范围为 0～255。
+     * @note 仅在界面线程调用；jobmanager 和 cam_id 必须有效，不自动训练或保存作业。
+     */
+    void on_spinBox_location_low_threshold_valueChanged(int arg1);
+
+    /**
+     * @brief 将训练参数框中的定位高阈值写入当前相机作业。
+     * @details 回填控件期间直接返回；用户调整时只更新 HighThreshold，供下次定位训练使用。
+     * @param arg1 控件提供的高阈值，无量纲整数，界面允许范围为 0～255。
+     * @note 仅在界面线程调用；jobmanager 和 cam_id 必须有效，不自动训练或保存作业。
+     */
+    void on_spinBox_location_high_threshold_valueChanged(int arg1);
+
+    /**
+     * @brief 将训练参数框中的定位最低匹配分数写入当前相机作业。
+     * @details 回填控件期间直接返回；用户调整时将数值转换为作业使用的 float，供后续定位匹配使用。
+     * @param arg1 控件提供的最低匹配分数，无量纲，界面允许范围为 0～1，保留三位小数。
+     * @note 仅在界面线程调用；jobmanager 和 cam_id 必须有效，不自动运行匹配或保存作业。
+     */
+    void on_doubleSpinBox_location_min_score_valueChanged(double arg1);
 
     void on_pushButton_update_trainROI_clicked();
 

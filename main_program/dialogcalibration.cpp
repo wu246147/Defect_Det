@@ -1,4 +1,4 @@
-#include "dialogcalibration.h"
+﻿#include "dialogcalibration.h"
 #include "ui_dialogcalibration.h"
 
 DialogCalibration::DialogCalibration(QWidget *parent) :
@@ -194,7 +194,6 @@ void DialogCalibration::on_pushButton_calibration_check_clicked()
 
         }
         diff /= camPoints.size();
-
         QMessageBox::warning(this, "标定验证", ("标定点映射误差为：" + std::to_string(diff)).data(), QMessageBox::StandardButton::Ok);
 
     }

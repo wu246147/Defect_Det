@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "qDebug"
 #include "jobworker.h"
@@ -3626,8 +3626,10 @@ void MainWindow::on_tableWidget_itemSelectionChanged()
     lastTableWidgetSelectItemID = currentID;
 
     //运行
+
     for(int i = 0 ; i < jobmanager.jobworkers.size() ; i++)
     {
+        jobmanager.jobworkers[i].isSiming = true;
         jobmanager.rundemo(i);
     }
 
