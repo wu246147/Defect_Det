@@ -1,4 +1,4 @@
-﻿#include "dialogrobotacq.h"
+#include "dialogrobotacq.h"
 #include "ui_dialogrobotacq.h"
 
 DialogRobotAcq::DialogRobotAcq(QWidget *parent) :

@@ -1,4 +1,4 @@
-﻿#ifndef DEFECTANOMALY_H
+#ifndef DEFECTANOMALY_H
 #define DEFECTANOMALY_H
 
 #include "dinomalyonnx.h"

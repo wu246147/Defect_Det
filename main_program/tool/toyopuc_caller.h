@@ -1,4 +1,4 @@
-﻿#ifndef TOYOPUC_CALLER_H
+#ifndef TOYOPUC_CALLER_H
 #define TOYOPUC_CALLER_H
 
 #include "toyopuc.h"

@@ -1,4 +1,4 @@
-﻿#ifndef DIALOGLINECAM_H
+#ifndef DIALOGLINECAM_H
 #define DIALOGLINECAM_H
 
 #include <QDialog>

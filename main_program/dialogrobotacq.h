@@ -1,4 +1,4 @@
-﻿#ifndef DIALOGROBOTACQ_H
+#ifndef DIALOGROBOTACQ_H
 #define DIALOGROBOTACQ_H
 
 #include <QDialog>

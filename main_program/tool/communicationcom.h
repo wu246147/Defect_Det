@@ -1,4 +1,4 @@
-﻿#ifndef COMMUNICATIONCOM_H
+#ifndef COMMUNICATIONCOM_H
 #define COMMUNICATIONCOM_H
 
 #include <QtSerialPort/QSerialPort>

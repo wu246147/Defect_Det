@@ -1,4 +1,4 @@
-﻿#include "toyopuc_caller.h"
+#include "toyopuc_caller.h"
 
 ToyopucCaller::ToyopucCaller()
 {

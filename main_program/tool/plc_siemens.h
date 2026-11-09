@@ -1,4 +1,4 @@
-﻿#ifndef PLC_SIEMENS_H
+#ifndef PLC_SIEMENS_H
 #define PLC_SIEMENS_H
 
 #include "snap7.h"

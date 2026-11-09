@@ -1,4 +1,4 @@
-﻿#ifndef DIALOGTOOLPARA_H
+#ifndef DIALOGTOOLPARA_H
 #define DIALOGTOOLPARA_H
 
 #include <QDialog>

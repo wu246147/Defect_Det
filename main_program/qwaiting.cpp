@@ -7,12 +7,12 @@ QWaiting::QWaiting(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    //ÉèÖÃÍ¸Ã÷¶È
+    //è®¾ç½®é€æ˜Žåº¦
     this->setWindowOpacity(0.8);
 
-    //È¡Ïû¶Ô»°¿ò±êÌâ
-    setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);//ÉèÖÃÎª¶Ô»°¿ò·ç¸ñ£¬²¢ÇÒÈ¥µô±ß¿ò
-    setWindowModality(Qt::WindowModal);//ÉèÖÃÎªÄ£Ê½¶Ô»°¿ò£¬Í¬Ê±ÔÚ¹¹Ôì¸Ã¶Ô»°¿òÊ±ÒªÉèÖÃ¸¸´°¿Ú
+    //å–æ¶ˆå¯¹è¯æ¡†æ ‡é¢˜
+    setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);//è®¾ç½®ä¸ºå¯¹è¯æ¡†é£Žæ ¼ï¼Œå¹¶ä¸”åŽ»æŽ‰è¾¹æ¡†
+    setWindowModality(Qt::WindowModal);//è®¾ç½®ä¸ºæ¨¡å¼å¯¹è¯æ¡†ï¼ŒåŒæ—¶åœ¨æž„é€ è¯¥å¯¹è¯æ¡†æ—¶è¦è®¾ç½®çˆ¶çª—å£
     ui->label->setStyleSheet("background-color: transparent;");
     m_Move = new QMovie("D:/code/qt/ui/gif/loading.gif");
     ui->label->setMovie(m_Move);

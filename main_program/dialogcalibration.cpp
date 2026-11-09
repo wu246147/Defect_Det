@@ -1,4 +1,4 @@
-﻿#include "dialogcalibration.h"
+#include "dialogcalibration.h"
 #include "ui_dialogcalibration.h"
 
 DialogCalibration::DialogCalibration(QWidget *parent) :

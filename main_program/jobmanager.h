@@ -1,4 +1,4 @@
-﻿#ifndef JOBMANAGER_H
+#ifndef JOBMANAGER_H
 #define JOBMANAGER_H
 #include "jobworker.h"
 #include "tool/cam.h"

@@ -1,4 +1,4 @@
-﻿#ifndef MYTEXTITEM_H
+#ifndef MYTEXTITEM_H
 #define MYTEXTITEM_H
 
 #include <QGraphicsTextItem>

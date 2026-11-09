@@ -1,4 +1,4 @@
-﻿#ifndef PROJECTTOOL_H
+#ifndef PROJECTTOOL_H
 #define PROJECTTOOL_H
 
 #include <QDir>

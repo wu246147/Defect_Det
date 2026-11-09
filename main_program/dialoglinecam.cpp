@@ -1,4 +1,4 @@
-﻿#include "dialoglinecam.h"
+#include "dialoglinecam.h"
 #include "ui_dialoglinecam.h"
 
 DialogLineCam::DialogLineCam(QWidget *parent) :

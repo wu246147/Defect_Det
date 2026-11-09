@@ -1,4 +1,4 @@
-﻿#include "communicationmodbus.h"
+#include "communicationmodbus.h"
 
 // 2 个寄存器(大端) → float
 inline float reg2float(const quint16 high, const quint16 low)

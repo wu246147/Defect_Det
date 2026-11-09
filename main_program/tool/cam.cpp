@@ -1,4 +1,4 @@
-﻿#include "cam.h"
+#include "cam.h"
 
 Cam::Cam()
 {

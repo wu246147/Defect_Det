@@ -1,4 +1,4 @@
-﻿#ifndef IOPARA_H
+#ifndef IOPARA_H
 #define IOPARA_H
 
 #include <map>

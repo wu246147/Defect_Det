@@ -1,4 +1,4 @@
-﻿#include "projecttool.h"
+#include "projecttool.h"
 
 projecttool::projecttool() {}
 

@@ -1,4 +1,4 @@
-﻿#include "jobmanager.h"
+#include "jobmanager.h"
 
 // #include <QtGlobal>   // 里面定义 Q_BIG_ENDIAN / Q_LITTLE_ENDIAN
 

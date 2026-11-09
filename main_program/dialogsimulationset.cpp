@@ -1,4 +1,4 @@
-﻿#include "dialogsimulationset.h"
+#include "dialogsimulationset.h"
 #include "ui_dialogsimulationset.h"
 
 DialogSimulationSet::DialogSimulationSet(QWidget *parent) :

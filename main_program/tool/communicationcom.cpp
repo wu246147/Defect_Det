@@ -1,4 +1,4 @@
-﻿#include "communicationcom.h"
+#include "communicationcom.h"
 
 
 COM::COM()

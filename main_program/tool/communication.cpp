@@ -1,4 +1,4 @@
-﻿#include "communication.h"
+#include "communication.h"
 
 Communication::Communication() {}
 

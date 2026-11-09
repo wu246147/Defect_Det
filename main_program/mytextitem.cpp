@@ -1,3 +1,3 @@
-﻿#include "mytextitem.h"
+#include "mytextitem.h"
 
 // MyTextItem::MyTextItem(QString text) {}

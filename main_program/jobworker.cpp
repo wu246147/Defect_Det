@@ -1,4 +1,4 @@
-﻿#include "jobworker.h"
+#include "jobworker.h"
 #include "QDeBug"
 #include <QCoreApplication>
 #include <stdexcept>

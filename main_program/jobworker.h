@@ -1,4 +1,4 @@
-﻿#ifndef JOBWORKER_H
+#ifndef JOBWORKER_H
 #define JOBWORKER_H
 //基本库
 #include <iostream>

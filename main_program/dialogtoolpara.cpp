@@ -1,4 +1,4 @@
-﻿#include "dialogtoolpara.h"
+#include "dialogtoolpara.h"
 #include "ui_dialogtoolpara.h"
 
 DialogToolPara::DialogToolPara(QWidget *parent) :

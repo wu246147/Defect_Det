@@ -1,4 +1,4 @@
-﻿#ifndef DIALOGCALIBRATION_H
+#ifndef DIALOGCALIBRATION_H
 #define DIALOGCALIBRATION_H
 
 #include <QDialog>

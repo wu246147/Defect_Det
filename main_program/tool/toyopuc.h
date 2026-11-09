@@ -1,4 +1,4 @@
-﻿// toyopuc.h —— 和你原来的几乎一样
+// toyopuc.h —— 和你原来的几乎一样
 #ifndef TOYOPUC_H
 #define TOYOPUC_H
 

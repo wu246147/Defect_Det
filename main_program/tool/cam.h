@@ -1,4 +1,4 @@
-﻿#ifndef CAM_H
+#ifndef CAM_H
 #define CAM_H
 
 //相机库
