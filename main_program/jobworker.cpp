@@ -315,18 +315,18 @@ JobWorker::JobWorker(int &id)
 
 void JobWorker::init()
 {
-    // if(is_train)
-    // {
-    //     if(cam_id == 0)
-    //     {
-    //         is_train = true;
-    //     }
-    //     else
-    //     {
-    //         train_location();
-    //     }
+    if(is_train)
+    {
+        // if(cam_id == 0)
+        // {
+        //     is_train = true;
+        // }
+        // else
+        // {
+        train_location();
+        // }
 
-    // }
+    }
     std::string modelPath = "model/Det_model.onnx";
     LOGE("start init SupervisedModel");
 
@@ -472,7 +472,7 @@ void JobWorker::runShapeMatch(cv::Mat img)
     {
         img_gray = img;
     }
-    // LOGE_HIGH("1111");
+    LOGE("1111");
 
     std::vector<float> Row;
     std::vector<float> Column;
@@ -494,11 +494,11 @@ void JobWorker::runShapeMatch(cv::Mat img)
                                     Angle,
                                     Score);
 
-    // LOGE_HIGH("2222");
+    LOGE("2222");
 
     if(rt == 0 && Row.size() > 0)
     {
-        // LOGE_HIGH("3333");
+        LOGE("3333");
 
         //计算映射矩阵
         ImgAlg::getTransform(Column[0], Row[0], -Angle[0], cv::Point2f(0, 0), locationTransformH);
@@ -889,7 +889,8 @@ void JobWorker::show_train_model()
     }
     cv::namedWindow("imgShow", cv::WINDOW_NORMAL);
     cv::imshow("imgShow", imgShow);
-    cv::waitKey(0);
+    cv::waitKey(2000);
+    cv::destroyAllWindows();
 
 
 
@@ -945,6 +946,8 @@ void JobWorker::run()
         else
         {
             LOGE("start runDefectDetTool");
+
+            runShapeMatch(img);
             runDefectDetTool(img);
 
             if(!isSiming)
@@ -1072,21 +1075,26 @@ void JobWorker::show_result()
         QGraphicsTextItem *tmp_string = new QGraphicsTextItem("str");
         QGraphicsLineItem *tmp_my_line = new QGraphicsLineItem();
         QGraphicsEllipseItem *tmp_ellip = new QGraphicsEllipseItem();
+        QGraphicsPolygonItem *tmp_poly = new QGraphicsPolygonItem();
+
         MyTextItem *tmp_text = new MyTextItem("");
         display->myGraphicsView->cleanItem(tmp_rect);
         display->myGraphicsView->cleanItem(tmp_string);
         display->myGraphicsView->cleanItem(tmp_my_line);
         display->myGraphicsView->cleanItem(tmp_ellip);
         display->myGraphicsView->cleanItem(tmp_text);
+        display->myGraphicsView->cleanItem(tmp_poly);
 
         delete tmp_rect;
         delete tmp_string;
         delete tmp_my_line;
         delete tmp_ellip;
         delete tmp_text;
+        delete tmp_poly;
 
         std::vector<QGraphicsItem *> item_list;
 
+        LOGE("4444");
 
         if(isGrabbing)
         {
@@ -1094,6 +1102,45 @@ void JobWorker::show_result()
         }
         else
         {
+            LOGE("4555");
+
+            if(locationShapeResult)
+            {
+                LOGE("5555");
+
+                int line_wide = 5;
+
+                //中点
+                QGraphicsEllipseItem *result_center = new QGraphicsEllipseItem(QRectF(locationPosition.x - 2, locationPosition.y - 2, 4, 4));
+                QPen pn(Qt::SolidLine);
+                pn.setColor(Qt::yellow);
+                pn.setWidth(line_wide);
+                result_center->setPen(pn);
+
+
+                item_list.push_back(result_center);
+                LOGE("6666");
+
+                //轮廓
+                QRectF result_rect;
+
+                result_rect.setLeft((shapeMatchROI.center.x - shapeMatchROI.size.width / 2) + (locationPosition.x - shapeMatchROI.center.x));
+                result_rect.setTop((shapeMatchROI.center.y - shapeMatchROI.size.height / 2) + (locationPosition.y - shapeMatchROI.center.y));
+                result_rect.setRight((shapeMatchROI.center.x + shapeMatchROI.size.width / 2) + (locationPosition.x - shapeMatchROI.center.x));
+                result_rect.setBottom((shapeMatchROI.center.y + shapeMatchROI.size.height / 2) + (locationPosition.y - shapeMatchROI.center.y));
+
+
+                QGraphicsRectItem *result_polygon = new QGraphicsRectItem(result_rect);
+
+                pn.setColor(Qt::green);
+                pn.setWidth(line_wide);
+                result_polygon->setPen(pn);
+
+                item_list.push_back(result_polygon);
+
+
+            }
+
             if(!defectDetResult)
             {
 
@@ -1197,6 +1244,11 @@ void JobWorker::dispose()
 bool JobWorker::result()
 {
     bool rt = true;
+    if(!locationShapeResult)
+    {
+        rt = false;
+    }
+
     if(!defectDetResult)
     {
         rt = false;
