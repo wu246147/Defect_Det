@@ -1,4 +1,4 @@
-#ifndef DIALOGTOOLPARA_H
+﻿#ifndef DIALOGTOOLPARA_H
 #define DIALOGTOOLPARA_H
 
 #include <QDialog>
@@ -10,6 +10,7 @@
 #include <QMessageBox>
 #include "mainwindow.h"
 
+#pragma execution_character_set("utf-8")
 
 namespace Ui
 {
@@ -106,6 +107,7 @@ public:
      * @details 运行模式显示运行参数和仿真面板，训练模式显示训练参数并隐藏仿真面板。
      * 回填当前相机的定位、缺陷检测参数和仿真路径时，通过 is_loading 阻止槽函数反写参数，
      * 最后刷新仿真图片列表并重置其选中状态。
+     * 缺陷模型下拉框随当前作业回填，阈值名称及提示按模型类型切换，回填不重复初始化模型。
      * @note 仅在界面线程调用；jobmanager 必须有效，cam_id 必须指向已有作业。
      * 本函数会修改控件状态，但不会自动保存作业或重新训练定位模型。
      */
@@ -122,6 +124,14 @@ public:
     void show_simulation_table();
 
 private slots:
+
+    /**
+     * @brief 响应用户选择缺陷模型，立即初始化所选类型并刷新阈值提示。
+     * @param index 下拉框索引，0 为目标检测、1 为异常检测；其他索引及控件回填期间不执行操作。
+     * @note 仅在界面线程调用，jobmanager 和 cam_id 必须有效；模型初始化与该作业推理串行执行。
+     * 初始化失败弹出提示并保留所选类型，后续检测按不合格处理；点击保存后才持久化选择。
+     */
+    void on_comboBox_defect_model_currentIndexChanged(int index);
 
     void on_comboBox_cam_currentIndexChanged(int index);
 
@@ -233,6 +243,13 @@ signals:
 
 
 private:
+    /**
+     * @brief 根据当前作业的缺陷模型类型刷新阈值名称和取值提示。
+     * @details 目标检测显示置信度及库内 0.5 下限，异常检测显示严格大于阈值的异常像素分数语义。
+     * @note 仅在界面线程且 jobmanager、cam_id 有效时调用；只修改文字，不改变参数或初始化模型。
+     */
+    void updateDefectModelControls();
+
     void closeEvent(QCloseEvent *event);
 
 private:

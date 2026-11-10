@@ -366,6 +366,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     //licence
     licence_check();
+    // LOGE_HIGH("111")
+
     //色调
     // qss_init();
     //全局线程池最大线程数修改
@@ -376,11 +378,14 @@ MainWindow::MainWindow(QWidget *parent)
 
     // ui->splitter_2->setStretchFactor(0, -1);
     // ui->splitter_2->setStretchFactor(1, 1);
+    // LOGE_HIGH("222")
 
     QList<int> widgetSizes;
     widgetSizes << 0 << 600;
     // ui->splitter_2->setSizes(widgetSizes);
     // ui->toolBar->setVisible(false);
+    // LOGE_HIGH("333")
+
     setTTF();
     ui->pushButton_max->setVisible(true);
     ui->groupBox->setVisible(false);

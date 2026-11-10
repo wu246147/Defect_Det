@@ -533,6 +533,8 @@ void DialogToolPara::updata_control_value()
 
     ui->doubleSpinBox_object_detect_thre->setValue(jobmanager->jobworkers[cam_id].defectDetThre);
     ui->spinBox_defect_area_thre->setValue(jobmanager->jobworkers[cam_id].defectAreaThre);
+    ui->comboBox_defect_model->setCurrentIndex(static_cast<int>(jobmanager->jobworkers[cam_id].defectModelType));
+    updateDefectModelControls();
 
 
     ui->lineEdit_simulation_path->setText(jobmanager->jobworkers[cam_id].src_image_dir.data());
@@ -1069,6 +1071,30 @@ void DialogToolPara::on_spinBox_location_caliper_roi_w_valueChanged(int arg1)
 
 }
 
+
+void DialogToolPara::updateDefectModelControls()
+{
+    const bool isAnomaly = jobmanager->jobworkers[cam_id].defectModelType == DefectModelType::AnomalyDetection;
+    ui->label_2->setText(isAnomaly ? tr("异常像素阈值") : tr("置信度阈值"));
+    ui->doubleSpinBox_object_detect_thre->setToolTip(isAnomaly
+        ? tr("仅保留分数严格大于此值的异常像素（0～1）；数值越大，筛选越严格。")
+        : tr("仅保留置信度大于等于此值的目标框（0～1）；模型内部沿用原有 0.5 置信度下限。"));
+}
+
+void DialogToolPara::on_comboBox_defect_model_currentIndexChanged(int index)
+{
+    if(is_loading || index < 0 || index > 1)
+    {
+        return;
+    }
+    const bool initialized = jobmanager->jobworkers[cam_id].setDefectModelType(static_cast<DefectModelType>(index));
+    updateDefectModelControls();
+    if(!initialized)
+    {
+        QMessageBox::warning(this, tr("模型初始化失败"),
+            tr("所选缺陷检测模型初始化失败，请检查程序目录下的模型文件及初始化日志。"));
+    }
+}
 
 void DialogToolPara::on_doubleSpinBox_object_detect_thre_valueChanged(double arg1)
 {

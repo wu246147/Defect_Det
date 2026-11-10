@@ -151,6 +151,11 @@ add_executable(Defect_Det
     tool/snap7.h
   )
 
+if(MSVC)
+    # 源文件和窄字符串统一使用 UTF-8，匹配 Qt 弹窗及界面日志的解码方式。
+    target_compile_options(Defect_Det PRIVATE /utf-8)
+endif()
+
 message(ALGORITHM_LIBS:${ALGORITHM_LIBS})
 message(OPENCV_LIBS:${OPENCV_LIBS})
 
@@ -180,9 +185,17 @@ if(WIN32)
             "$<TARGET_FILE_DIR:Defect_Det>" VERBATIM)
 endif()
 
-option(DEFECT_ANOMALY_BUILD_TESTS "构建异常检测分段、筛选及真实模型验证" OFF)
+option(DEFECT_ANOMALY_BUILD_TESTS "构建缺陷模型选择、异常检测分段及真实模型验证" OFF)
 if(DEFECT_ANOMALY_BUILD_TESTS)
     enable_testing()
+    add_executable(defect_model_tests tests/defect_model_tests.cpp jobworker.h jobworker.cpp)
+    target_include_directories(defect_model_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_link_libraries(defect_model_tests PRIVATE Qt5::Widgets Qt5::Network Qt5::Concurrent
+        ${BOOST_LIBS} ${ALGORITHM_LIBS} defect_anomaly)
+    if(MSVC)
+        target_compile_options(defect_model_tests PRIVATE /utf-8)
+    endif()
+    add_test(NAME defect_model_parameters COMMAND defect_model_tests)
     add_executable(defect_anomaly_tests tests/defect_anomaly_tests.cpp)
     set_target_properties(defect_anomaly_tests PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
     target_link_libraries(defect_anomaly_tests PRIVATE defect_anomaly)

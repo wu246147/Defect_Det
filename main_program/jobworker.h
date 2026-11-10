@@ -47,6 +47,8 @@
 
 #include "mylog.h"
 #include <type_traits>
+#include <memory>
+#include <mutex>
 
 
 #pragma execution_character_set("utf-8")
@@ -59,6 +61,17 @@ enum work_mode_type
     simulation_mode = 1,
     auto_mode = 2,
     hand_mode = 3
+};
+
+/**
+ * @brief 缺陷检测使用的模型类型，供作业持久化和参数界面共同使用。
+ * @details 数值 0、1 分别对应界面下拉框的目标检测和异常检测，保存后不得随意调整。
+ * 每个作业仅初始化所选模型；类型值不持有推理资源，旧作业缺少此字段时使用目标检测。
+ */
+enum class DefectModelType
+{
+    ObjectDetection = 0, ///< 默认值，使用 RaivasDet 目标检测模型输出缺陷类别、置信度和矩形框。
+    AnomalyDetection = 1 ///< 使用 Dinomaly 对选区分块推理，以异常像素分数提取缺陷框。
 };
 
 ///
@@ -245,14 +258,40 @@ QPixmap MatToPixmap(const cv::Mat &cvImage);
 QString createMultipleFolders(const QString path);
 
 
+/**
+ * @brief 单相机作业，保存定位、缺陷检测和采集参数，并管理本作业的处理结果。
+ * @details 缺陷模型类型随作业序列化；目标检测句柄和异常检测对象由本作业独立拥有，
+ * 同时只初始化所选类型，复制配置不会共享缺陷推理资源，模型初始化或切换会清除旧结果。
+ * 图像、显示对象、定位句柄及其他既有成员遵循各自原有使用方式，不由缺陷模型切换接管。
+ * @note 缺陷推理和模型切换使用内部互斥锁；其他参数修改、结果访问及对象析构仍须由调用方协调，
+ * 不得在作业执行中销毁对象。新建或复制后需调用 init 才能使用缺陷模型。
+ */
 class JobWorker: public QObject
 {
     Q_OBJECT
 
 public:
+    /**
+     * @brief 从已有作业复制配置，创建不持有缺陷推理模型的新作业。
+     * @param parent 用作配置来源的非空作业指针，调用期间必须有效且不能被并发修改；不转移其所有权。
+     * @note 沿用现有图像和定位句柄的复制方式，缺陷模型类型随参数复制，推理模型需另行调用 init 初始化。
+     * 内存分配等复制异常向调用方传播；调用方负责新作业的生命周期。
+     */
     Q_INVOKABLE explicit JobWorker(JobWorker *parent = nullptr);
+    /**
+     * @brief 复制作业配置及缺陷模型类型，不共享缺陷模型资源。
+     * @param jobworker 有效的源作业引用，复制期间不得被并发修改。
+     * @note 图像和定位句柄保持既有复制语义，新对象需调用 init 初始化缺陷模型；复制异常向调用方传播。
+     */
     JobWorker(const JobWorker &jobworker);
 
+    /**
+     * @brief 将源作业配置复制到当前作业，并清除当前缺陷模型和检测结果。
+     * @param jobworker 有效的源作业引用；允许自赋值，自赋值不改变对象状态。
+     * @return 当前作业引用，缺陷模型需在后续调用 init 时按复制的类型重新初始化。
+     * @note 调用方须保证两个作业均未被并发修改或执行检测；原有图像和定位句柄复制语义不变。
+     * 缺陷推理资源由当前对象释放，配置复制异常向调用方传播，不回滚已复制字段。
+     */
     JobWorker &operator =(const JobWorker &jobworker);
     ///
     /// \brief JobWorker 相机作用类
@@ -370,7 +409,9 @@ public:
     ///输出结果
     int resultType = 0; //0为像素坐标，1为实际坐标，2为相对标准位置坐标
 
-    // 缺陷检测参数：归一化异常像素阈值，以及缺陷最小外接框面积。
+    /// 缺陷模型选择，随作业保存；运行期间请通过 setDefectModelType 切换并初始化。
+    DefectModelType defectModelType = DefectModelType::ObjectDetection;
+    // 缺陷检测参数：目标置信度或归一化异常像素阈值，以及缺陷最小外接框面积。
     double defectDetThre = 0.5;
     int defectAreaThre = 100;
 
@@ -384,7 +425,7 @@ public:
     cv::Mat img;
     // cv::Mat train_img;
 
-    // 每个作业独立持有模型，析构或重新初始化时自动释放推理资源。
+    /// 独立拥有异常检测模型，切换、重新初始化或析构时自动释放。
     std::unique_ptr<DinomalyOnnx> defectAnomalyModel;
 
     //定位检测结果
@@ -568,11 +609,22 @@ signals:
     //函数
 public:
 
-    ///
-    /// \brief init 加载程序目录 model/dinomaly.onnx，初始化本作业的 CPU 异常检测模型。
-    /// 初始化失败时清空模型并记录错误，后续检测按不合格处理。
-    ///
+    /**
+     * @brief 恢复定位训练状态，并按作业的模型类型初始化缺陷检测模型。
+     * @details 已训练作业沿用原有定位训练流程；随后加载程序目录下的 Det_model.onnx 或 dinomaly.onnx。
+     * @note 调用会释放旧缺陷模型和清除结果；初始化失败记录日志，后续检测按不合格处理。
+     * 缺陷模型初始化与推理由互斥锁串行执行，调用方仍须避免定位训练及其他作业状态被并发修改。
+     */
     void init();
+
+    /**
+     * @brief 切换本作业的缺陷模型类型并立即初始化所选模型，供设置界面使用。
+     * @param modelType 需要启用的有效模型类型，只允许 ObjectDetection 或 AnomalyDetection。
+     * @return 初始化成功返回 true；无效类型或模型加载失败返回 false，并记录错误。
+     * @note 与缺陷推理串行执行，释放旧模型并清除旧结果，不触发定位训练或自动保存。
+     * 加载失败保留用户选择以便修复部署后重试，检测保持不合格；无效类型不改变当前选择。
+     */
+    bool setDefectModelType(DefectModelType modelType);
 
     ///
     /// \brief acqfifo_complete 取像完成事件
@@ -699,12 +751,14 @@ public:
     /**
      * @brief 按既有的字段名称和值协议保存或加载相机作业参数。
      * @details 保存时依次写入参数并以 JobWorkerEnd 结束；加载时按字段名恢复对象状态，
-     * 包括定位训练阈值和最低匹配分数。旧作业未包含 MinScore 时保留对象当前值，新对象默认为 0.5。
+     * 包括定位训练阈值、最低匹配分数和缺陷模型类型。旧作业未包含 MinScore 时保留对象当前值，新对象默认为 0.5。
+     * 加载前将缺陷模型类型重置为目标检测，旧作业缺少此字段时保持该默认值；无效类型记录日志并使用目标检测。
      * @tparam Archive 支持 Boost.Serialization 读写、is_saving 和 is_loading 标记的归档类型。
      * @param ar 调用方持有的有效归档引用；保存时接收字段数据，加载时提供字段数据。
      * 调用期间归档及其底层流必须保持有效，流资源由调用方管理。
      * @param version Boost 传入的类版本号；当前实现按字段名兼容旧作业，不使用此值分支。
      * @note 加载会修改当前对象，调用方须避免与采集、检测及界面参数修改并发执行。
+     * 读取完成后调用方须调用 init，使缺陷模型与加载的类型一致。
      * 保留现有异常处理：保存异常向调用方传播；加载时遇到归档异常则记录日志并终止读取，
      * 已读取的字段不会回滚；未知字段按现有逻辑记录日志并尝试将其值作为字符串跳过。
      */
@@ -840,6 +894,10 @@ public:
             ar &name;
             ar &resultType;
 
+            name = "defectModelType";
+            ar &name;
+            int modelType = static_cast<int>(defectModelType);
+            ar &modelType;
             name = "defectDetThre";
             ar &name;
             ar &defectDetThre;
@@ -891,6 +949,8 @@ public:
         }
         if(Archive::is_loading::value)
         {
+            // 加载旧作业时不沿用上一个作业选择的异常检测类型。
+            defectModelType = DefectModelType::ObjectDetection;
             while(true)
             {
                 try
@@ -1047,6 +1107,21 @@ public:
                         ar &resultType;
                     }
 
+                    else if(name.compare("defectModelType") == 0)
+                    {
+                        int modelType = 0;
+                        ar &modelType;
+                        if(modelType == static_cast<int>(DefectModelType::ObjectDetection) ||
+                           modelType == static_cast<int>(DefectModelType::AnomalyDetection))
+                        {
+                            defectModelType = static_cast<DefectModelType>(modelType);
+                        }
+                        else
+                        {
+                            defectModelType = DefectModelType::ObjectDetection;
+                            LOGE_HIGH(u8"作业缺陷模型类型无效：%d，使用默认目标检测模型。", modelType);
+                        }
+                    }
                     else if(name.compare("defectDetThre") == 0)
                     {
                         ar &defectDetThre;
@@ -1135,10 +1210,14 @@ public:
     ///
     void runCaliperTool(cv::Mat img);
 
-    ///
-    /// \brief runDefectDetTool 仅对选区裁剪图分段异常检测，合并后输出整图坐标的缺陷框及最低分数。
-    /// \param img 原始八位图像，不修改像素；空图、无效选区或推理失败时检测结果为不合格。
-    ///
+    /**
+     * @brief 使用当前所选模型执行缺陷检测，输出原图坐标的缺陷框和合格状态。
+     * @details 目标检测沿用整图推理、框中心位于选区和置信度/面积筛选；异常检测对选区分块推理后合并缺陷。
+     * @param img 原始非空八位图像，支持灰度、BGR、BGRA、BGR565；按值传入但不修改共享像素。
+     * @note 调用期间持有模型互斥锁，模型切换等待本次检测完成；调用方不得并发修改阈值、选区或读取结果。
+     * 每次清空旧结果，空图、无效选区、未初始化或推理异常均记录原因并按不合格处理，不返回部分缺陷。
+     * 模型资源仍归本作业所有，临时图像由局部对象自动释放。
+     */
     void runDefectDetTool(cv::Mat img);
 
     ///
@@ -1161,6 +1240,21 @@ public:
     ///
     void show_chips_contour();
     void runCoarsePositioning(cv::Mat img);
+
+private:
+    /// 串行保护缺陷推理、模型切换和初始化，防止推理期间释放模型。
+    std::mutex defectModelMutex;
+    /// 独立拥有目标检测句柄，切换、重新初始化或析构时调用库的销毁接口。
+    std::unique_ptr<void, decltype(&RaivasDet_Destroy)> defectDetectionModel{nullptr, &RaivasDet_Destroy};
+
+    /**
+     * @brief 释放旧缺陷模型和结果，根据 defectModelType 加载程序目录下的对应模型。
+     * @details 目标检测沿用历史接口的 0.5 阈值、1280 输入尺寸及 CPU 配置；异常检测使用 Dinomaly CPU 模型。
+     * 初始化中的标准异常记录日志并返回失败，局部智能指针负责清理未成功提交的模型。
+     * @return 模型可供推理时返回 true；路径、类型或模型初始化失败时返回 false，并保持缺陷结果为不合格。
+     * @note 调用方必须持有 defectModelMutex；不执行定位训练，不保存作业参数。调用会清除原有检测结果。
+     */
+    bool initializeDefectModel();
 };
 
 #endif // JOBWORKER_H

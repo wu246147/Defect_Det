@@ -1,6 +1,7 @@
 ﻿#include "jobworker.h"
 #include "QDeBug"
 #include <QCoreApplication>
+#include <cmath>
 #include <stdexcept>
 
 template <typename T>
@@ -120,6 +121,7 @@ JobWorker::JobWorker(JobWorker *parent)
 
     this-> defectAreaThre =  parent->defectAreaThre;
     this-> defectDetThre =  parent->defectDetThre;
+    this->defectModelType = parent->defectModelType;
 
 }
 
@@ -212,11 +214,22 @@ JobWorker::JobWorker(const JobWorker &jobworker)
 
     this-> defectAreaThre =  jobworker.defectAreaThre;
     this-> defectDetThre =  jobworker.defectDetThre;
+    this->defectModelType = jobworker.defectModelType;
 
 }
 
 JobWorker &JobWorker::operator =(const JobWorker &jobworker)
 {
+    if(this == &jobworker)
+    {
+        return *this;
+    }
+    // 配置赋值不共享源作业模型，清除旧模型以免使用与新配置不一致的会话。
+    std::lock_guard<std::mutex> lock(defectModelMutex);
+    defectDetectionModel.reset();
+    defectAnomalyModel.reset();
+    defectDetResults.clear();
+    defectDetResult = false;
     this->cam_id = jobworker.cam_id;
     this->src_image_dir = jobworker.src_image_dir;
 
@@ -304,6 +317,7 @@ JobWorker &JobWorker::operator =(const JobWorker &jobworker)
 
     this-> defectAreaThre =  jobworker.defectAreaThre;
     this-> defectDetThre =  jobworker.defectDetThre;
+    this->defectModelType = jobworker.defectModelType;
 
     return *this;
 }
@@ -317,42 +331,92 @@ JobWorker::JobWorker(int &id)
 
 void JobWorker::init()
 {
-    defectAnomalyModel.reset();
-    defectDetResults.clear();
-    defectDetResult = false;
-    const std::string modelPath = QDir(QCoreApplication::applicationDirPath())
-                                  .filePath("model/dinomaly.onnx").toUtf8().toStdString();
-    LOGE(u8"开始初始化 Dinomaly 模型：%s", modelPath.c_str());
-
     try
     {
         if(is_train)
         {
-            // if(cam_id == 0)
-            // {
-            //     is_train = true;
-            // }
-            // else
-            // {
             train_location();
-            // }
-
         }
+        std::lock_guard<std::mutex> lock(defectModelMutex);
+        initializeDefectModel();
+    }
+    catch(const std::exception& error)
+    {
+        std::lock_guard<std::mutex> lock(defectModelMutex);
+        defectDetectionModel.reset();
+        defectAnomalyModel.reset();
+        defectDetResults.clear();
+        defectDetResult = false;
+        LOGE_HIGH(u8"作业模型初始化异常：%s", error.what());
+    }
+}
+
+bool JobWorker::setDefectModelType(DefectModelType modelType)
+{
+    if(modelType != DefectModelType::ObjectDetection && modelType != DefectModelType::AnomalyDetection)
+    {
+        LOGE_HIGH(u8"缺陷模型类型无效：%d", static_cast<int>(modelType));
+        return false;
+    }
+    std::lock_guard<std::mutex> lock(defectModelMutex);
+    defectModelType = modelType;
+    return initializeDefectModel();
+}
+
+bool JobWorker::initializeDefectModel()
+{
+    defectDetectionModel.reset();
+    defectAnomalyModel.reset();
+    defectDetResults.clear();
+    defectDetResult = false;
+    try
+    {
+        const QDir applicationDir(QCoreApplication::applicationDirPath());
+        if(defectModelType == DefectModelType::ObjectDetection)
+        {
+            const std::string modelPath = applicationDir.filePath("model/Det_model.onnx").toUtf8().toStdString();
+            LOGE(u8"开始初始化目标检测模型：%s", modelPath.c_str());
+            decltype(defectDetectionModel) model(RaivasDet_Create(), &RaivasDet_Destroy);
+            if(!model)
+            {
+                LOGE_HIGH(u8"目标检测模型句柄创建失败。");
+                return false;
+            }
+            // 沿用 Git 历史中的目标检测库接口和参数，后续仍按作业置信度及面积进行筛选。
+            const int status = RaivasDet_Init(model.get(), modelPath.c_str(), 0.5f, 1280, false);
+            if(status != 0)
+            {
+                LOGE_HIGH(u8"目标检测模型初始化失败，状态码：%d", status);
+                return false;
+            }
+            defectDetectionModel = std::move(model);
+            LOGE(u8"目标检测模型初始化完成。");
+            return true;
+        }
+        if(defectModelType != DefectModelType::AnomalyDetection)
+        {
+            LOGE_HIGH(u8"缺陷模型类型无效：%d", static_cast<int>(defectModelType));
+            return false;
+        }
+        const std::string modelPath = applicationDir.filePath("model/dinomaly.onnx").toUtf8().toStdString();
+        LOGE(u8"开始初始化 Dinomaly 模型：%s", modelPath.c_str());
         auto model = std::make_unique<DinomalyOnnx>();
         // 库生成的可视化使用默认阈值；实际缺陷筛选每次读取 defectDetThre，无需重载模型。
         const int status = model->init(modelPath.c_str(), 0.5f, false);
         if(status != 0)
         {
             LOGE_HIGH(u8"Dinomaly 初始化失败：%s", model->lastError().c_str());
-            return;
+            return false;
         }
         const auto info = model->modelInfo();
         LOGE(u8"Dinomaly 初始化完成，网络尺寸：%d x %d", info.networkSize.width, info.networkSize.height);
         defectAnomalyModel = std::move(model);
+        return true;
     }
     catch(const std::exception& error)
     {
-        LOGE_HIGH(u8"Dinomaly 初始化异常：%s", error.what());
+        LOGE_HIGH(u8"缺陷模型初始化异常：%s", error.what());
+        return false;
     }
 }
 
@@ -549,26 +613,89 @@ void JobWorker::runShapeMatch(cv::Mat img)
 
 void JobWorker::runDefectDetTool(cv::Mat img)
 {
-    // 默认失败，只有全部切块推理并完成筛选后才允许判定为合格。
+    std::lock_guard<std::mutex> lock(defectModelMutex);
+    // 默认失败，只有所选模型完成全部推理和筛选后才允许判定为合格。
     defectDetResult = false;
     defectDetResults.clear();
     const auto start = std::chrono::steady_clock::now();
     try
     {
-        if(!defectAnomalyModel)
+        if(img.empty() || img.dims != 2 || img.depth() != CV_8U)
         {
-            throw std::runtime_error(u8"Dinomaly 模型未成功初始化，请检查模型路径及初始化日志。");
+            throw std::invalid_argument(u8"缺陷检测需要非空的二维八位图像。");
         }
-        LOGE(u8"开始 Dinomaly 选区分段检测，选区：%d,%d,%d,%d，像素阈值：%f，框面积阈值：%d",
-             defectSelectBox.x, defectSelectBox.y, defectSelectBox.width, defectSelectBox.height,
-             defectDetThre, defectAreaThre);
-        defectDetResults = DefectAnomaly::detect(*defectAnomalyModel, img, defectSelectBox,
-                           defectDetThre, defectAreaThre);
+        if(defectModelType == DefectModelType::ObjectDetection)
+        {
+            if(!defectDetectionModel)
+            {
+                throw std::runtime_error(u8"目标检测模型未成功初始化，请检查模型路径及初始化日志。");
+            }
+            if(defectSelectBox.width <= 0 || defectSelectBox.height <= 0 ||
+               (cv::Rect2d(defectSelectBox) & cv::Rect2d(0, 0, img.cols, img.rows)).empty())
+            {
+                throw std::invalid_argument(u8"缺陷检测选区无效或完全位于图像之外。");
+            }
+            if(!std::isfinite(defectDetThre) || defectDetThre < 0 || defectDetThre > 1 || defectAreaThre < 0)
+            {
+                throw std::invalid_argument(u8"缺陷检测阈值必须位于 0～1，外接框面积阈值不能为负。");
+            }
+            cv::Mat processImg;
+            switch(img.channels())
+            {
+            case 1:
+                cv::cvtColor(img, processImg, cv::COLOR_GRAY2BGR);
+                break;
+            case 2:
+                cv::cvtColor(img, processImg, cv::COLOR_BGR5652BGR);
+                break;
+            case 3:
+                processImg = img.clone();
+                break;
+            case 4:
+                cv::cvtColor(img, processImg, cv::COLOR_BGRA2BGR);
+                break;
+            default:
+                throw std::invalid_argument(u8"目标检测仅支持灰度、BGR、BGRA 或 BGR565 图像。");
+            }
+            std::vector<DetectDetResult> results;
+            LOGE(u8"开始 RaivasDet_Detect 目标检测。");
+            const int status = RaivasDet_Detect(defectDetectionModel.get(), &processImg, &results);
+            if(status != 0)
+            {
+                throw std::runtime_error(u8"目标检测推理失败，状态码：" + std::to_string(status));
+            }
+            for(const auto& result : results)
+            {
+                // 保留历史调用的框中心点判定及等于阈值时保留的筛选规则。
+                const cv::Point center(result.box.x + result.box.width / 2, result.box.y + result.box.height / 2);
+                if(!defectSelectBox.contains(center) || result.score < defectDetThre || result.box.area() < defectAreaThre)
+                {
+                    continue;
+                }
+                defectDetResults.push_back(result);
+            }
+        }
+        else if(defectModelType == DefectModelType::AnomalyDetection)
+        {
+            if(!defectAnomalyModel)
+            {
+                throw std::runtime_error(u8"Dinomaly 模型未成功初始化，请检查模型路径及初始化日志。");
+            }
+            LOGE(u8"开始 Dinomaly 选区分段检测，选区：%d,%d,%d,%d，像素阈值：%f，框面积阈值：%d",
+                 defectSelectBox.x, defectSelectBox.y, defectSelectBox.width, defectSelectBox.height,
+                 defectDetThre, defectAreaThre);
+            defectDetResults = DefectAnomaly::detect(*defectAnomalyModel, img, defectSelectBox,
+                               defectDetThre, defectAreaThre);
+        }
+        else
+        {
+            throw std::invalid_argument(u8"缺陷模型类型无效，请重新选择检测模型。");
+        }
         defectDetResult = defectDetResults.empty();
-        LOGE(u8"异常缺陷数量：%d", static_cast<int>(defectDetResults.size()));
+        LOGE(u8"缺陷数量：%d", static_cast<int>(defectDetResults.size()));
         for(const auto& result : defectDetResults)
         {
-            LOGE(u8"异常最低分数：%f，外接框面积：%f", result.score, result.box.area());
+            LOGE(u8"缺陷分数：%f，外接框面积：%f", result.score, result.box.area());
         }
     }
     catch(cv::Exception &e)
@@ -597,7 +724,7 @@ void JobWorker::runDefectDetTool(cv::Mat img)
         locationResult = false;
         defectDetResult = false;
         defectDetResults.clear();
-        LOGE_HIGH(u8"Dinomaly 异常检测发生未知错误。");
+        LOGE_HIGH(u8"缺陷检测发生未知错误。");
     }
     const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                               std::chrono::steady_clock::now() - start).count();

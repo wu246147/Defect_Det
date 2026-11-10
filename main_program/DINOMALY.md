@@ -1,4 +1,22 @@
-# Dinomaly 异常检测接入
+# 缺陷模型选择与 Dinomaly 异常检测接入
+
+## 模型选择和作业保存
+
+设置界面“运行参数”中提供“缺陷检测模型”，可选择“目标检测模型”或“异常检测模型”。
+新作业和缺少该参数的旧作业默认使用目标检测。每个相机作业独立保存 `defectModelType`：
+`0` 为目标检测，`1` 为异常检测；加载时无效类型记录日志并使用默认目标检测。
+选择后立即释放旧模型并初始化所选模型，不重新训练定位；点击“保存”后将选择写入作业。
+打开设置、切换相机或回填控件时不重复初始化；启动或加载作业时按保存的类型初始化。
+初始化或推理失败记录原因并按不合格处理，不自动改用另一模型。
+模型切换、初始化与缺陷推理由互斥锁串行执行，避免检测期间释放正在使用的模型。
+
+目标检测沿用 Git 提交 `145ceb0` 的 `RaivasDet_Create/Init/Detect/Destroy` 调用方式，
+从程序目录加载 `model/Det_model.onnx`，初始化参数为置信度 `0.5`、输入尺寸 `1280`、CPU 推理。
+兼容灰度、BGR、BGRA、BGR565 输入，转换后整图推理；仅保留框中心在选区内、
+置信度大于等于 `defectDetThre` 且外接框面积大于等于 `defectAreaThre` 的目标。
+库内部的置信度下限仍为 `0.5`，界面阈值低于它时不会恢复已被库过滤的框。
+目标检测使用工程现有 `include/algorithm/yolodetonnx.h` 和 `opencv_onnx_det_lib`，
+保持历史五参数初始化接口，不替换为外部新版本的四参数接口。
 
 ## 模型和依赖
 
@@ -12,13 +30,14 @@
 模型必须是该库支持的、含 `anomalib.*` 元数据及内置预处理和校准后处理的 Dinomaly ONNX。
 仅改名的 YOLO 模型或普通第三方 ONNX 不能使用。
 
-发布程序时包含 `opencv_onnx_anomaly_lib.dll`、`onnxruntime.dll`、`model/dinomaly.onnx`
+发布程序时包含 `opencv_onnx_det_lib.dll`、`model/Det_model.onnx`，以及异常检测所需的
+`opencv_onnx_anomaly_lib.dll`、`onnxruntime.dll`、`model/dinomaly.onnx`
 以及原有 Qt、相机等依赖。现有工程同时链接 OpenCV 4.5.5 和 4.8，发布时需同时包含
-`opencv_world455.dll` 和 `opencv_world480.dll`。旧目标检测模型不再用于缺陷检测。
+`opencv_world455.dll` 和 `opencv_world480.dll`。运行时仅初始化当前作业选择的模型。
 构建系统会部署 ONNX Runtime 和 OpenCV DLL；同一构建目录内生成异常检测 DLL。
 更换电脑时先配置库路径及模型路径，再构建和部署。
 
-## 检测过程
+## 异常检测过程
 
 1. 读取 `defectSelectBox` 与原图的有效交集，仅对此选区裁剪图推理。
 2. 按训练数据准备脚本 `toyopuc_prepare.py` 的规则，两轴使用 640 像素块、480 像素步长。
@@ -34,9 +53,9 @@
 7. 沿用原来的外接框面积过滤：框面积小于 `defectAreaThre` 时丢弃，等于时保留。
    合并后再提框，避免同一跨块缺陷被重复显示或提前按面积丢弃。
 
-参数界面将“置信度阈值”改为“异常像素阈值”，范围 0～1，越大筛选越严格。
+参数界面按模型选择显示“置信度阈值”或“异常像素阈值”，范围 0～1，越大筛选越严格。
 其数值是校准后的异常分数，不是概率。阈值为 1 时不会保留异常像素。
-修改阈值在下一次检测立即生效，无需重载模型。原有参数名称和作业文件格式保持不变，
+修改阈值在下一次检测立即生效，无需重载模型。原有阈值名称和字段协议保持不变，新增模型类型字段，
 旧作业的数值可继续读取，但目标检测置信度与异常像素分数含义不同，需要用现场样本重新确认阈值。
 
 `defectDetResults` 继续提供原有框、面积和分数显示；有有效缺陷时结果为不合格。
@@ -51,11 +70,20 @@
 cmake -S main_program -B main_program/build/Desktop_Qt_5_15_2_MSVC2019_64bit-Release `
   -DDEFECT_ANOMALY_BUILD_TESTS=ON `
   -DANOMALY_ONNX_ROOT=E:/code/study/qt/opencv_onnxruntime
-cmake --build main_program/build/Desktop_Qt_5_15_2_MSVC2019_64bit-Release --parallel 4
+cmake --build main_program/build/Desktop_Qt_5_15_2_MSVC2019_64bit-Release --clean-first --parallel 4
 ctest --test-dir main_program/build/Desktop_Qt_5_15_2_MSVC2019_64bit-Release --output-on-failure
 ```
 
-测试包括切块覆盖、跨块连通缺陷融合、阈值边界、最低分数、框内孔洞、面积边界、坐标偏移和非法输入。
+模型类型、模型句柄等作业成员发生变化后，首次构建应清理并完整重编译。
+旧构建目录中的部分目标文件若未因头文件变化重新生成，可能与新对象布局不一致，
+导致链接成功但启动时出现访问异常或栈保护失败；Qt Creator 中可执行“重新构建项目”。
+构建后须实际启动程序，确认日志包含模型初始化完成和 `MainWindow finish init`，
+并确认主界面持续运行；仅执行算法测试不能覆盖主程序的启动流程。
+
+测试包括模型类型默认值、两种类型的保存读取、旧作业兼容、非法类型、配置复制、未初始化时失败处理，
+以及切块覆盖、跨块连通缺陷融合、阈值边界、最低分数、框内孔洞、面积边界、坐标偏移和非法输入。
 存在默认模型时额外执行真实模型测试，验证四块推理、输入不变、选区外像素隔离、阈值即时生效及选区裁剪。
 也可直接执行 `defect_anomaly_tests.exe <dinomaly.onnx> <测试图片>`，使用现场 ROI 图像验证。
+两种模型部署到程序目录后，执行 `defect_model_tests.exe --models` 可验证真实模型的
+“目标检测→异常检测→目标检测”连续初始化、推理、输入不变及越界选区处理；不启动相机或通讯。
 这些验证检查部署与结果转换流程，不代表对新的现场样本重新评估过检出率。

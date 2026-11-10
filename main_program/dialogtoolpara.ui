@@ -68,14 +68,14 @@
           <item row="0" column="0">
            <widget class="QLabel" name="label_2">
             <property name="text">
-             <string>异常像素阈值</string>
+             <string>置信度阈值</string>
             </property>
            </widget>
           </item>
           <item row="0" column="1">
            <widget class="QDoubleSpinBox" name="doubleSpinBox_object_detect_thre">
             <property name="toolTip">
-             <string>仅保留分数严格大于此值的异常像素（0～1）；数值越大，筛选越严格。</string>
+             <string>仅保留置信度大于等于此值的目标框（0～1）；模型内部沿用原有 0.5 置信度下限。</string>
             </property>
             <property name="minimum">
              <double>0.000000000000000</double>
@@ -97,6 +97,30 @@
             <property name="maximum">
              <number>9999999</number>
             </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_defect_model">
+            <property name="text">
+             <string>缺陷检测模型</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QComboBox" name="comboBox_defect_model">
+            <property name="toolTip">
+             <string>选择后立即初始化模型；点击保存可将选择保存到当前作业。</string>
+            </property>
+            <item>
+             <property name="text">
+              <string>目标检测模型</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>异常检测模型</string>
+             </property>
+            </item>
            </widget>
           </item>
          </layout>
