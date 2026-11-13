@@ -260,7 +260,7 @@ QString createMultipleFolders(const QString path);
 
 /**
  * @brief 单相机作业，保存定位、缺陷检测和采集参数，并管理本作业的处理结果。
- * @details 缺陷模型类型随作业序列化；目标检测句柄和异常检测对象由本作业独立拥有，
+ * @details 缺陷模型类型、异常检测裁块大小和步长随作业序列化；目标检测句柄和异常检测对象由本作业独立拥有，
  * 同时只初始化所选类型，复制配置不会共享缺陷推理资源，模型初始化或切换会清除旧结果。
  * 图像、显示对象、定位句柄及其他既有成员遵循各自原有使用方式，不由缺陷模型切换接管。
  * @note 缺陷推理和模型切换使用内部互斥锁；其他参数修改、结果访问及对象析构仍须由调用方协调，
@@ -274,19 +274,19 @@ public:
     /**
      * @brief 从已有作业复制配置，创建不持有缺陷推理模型的新作业。
      * @param parent 用作配置来源的非空作业指针，调用期间必须有效且不能被并发修改；不转移其所有权。
-     * @note 沿用现有图像和定位句柄的复制方式，缺陷模型类型随参数复制，推理模型需另行调用 init 初始化。
+     * @note 沿用现有图像和定位句柄的复制方式，缺陷模型类型及异常分块参数随配置复制，推理模型需另行调用 init 初始化。
      * 内存分配等复制异常向调用方传播；调用方负责新作业的生命周期。
      */
     Q_INVOKABLE explicit JobWorker(JobWorker *parent = nullptr);
     /**
-     * @brief 复制作业配置及缺陷模型类型，不共享缺陷模型资源。
+     * @brief 复制作业配置、缺陷模型类型及异常分块参数，不共享缺陷模型资源。
      * @param jobworker 有效的源作业引用，复制期间不得被并发修改。
      * @note 图像和定位句柄保持既有复制语义，新对象需调用 init 初始化缺陷模型；复制异常向调用方传播。
      */
     JobWorker(const JobWorker &jobworker);
 
     /**
-     * @brief 将源作业配置复制到当前作业，并清除当前缺陷模型和检测结果。
+     * @brief 将源作业配置及异常分块参数复制到当前作业，并清除当前缺陷模型和检测结果。
      * @param jobworker 有效的源作业引用；允许自赋值，自赋值不改变对象状态。
      * @return 当前作业引用，缺陷模型需在后续调用 init 时按复制的类型重新初始化。
      * @note 调用方须保证两个作业均未被并发修改或执行检测；原有图像和定位句柄复制语义不变。
@@ -411,6 +411,10 @@ public:
 
     /// 缺陷模型选择，随作业保存；运行期间请通过 setDefectModelType 切换并初始化。
     DefectModelType defectModelType = DefectModelType::ObjectDetection;
+    /// 异常检测裁块边长上限，单位为像素，必须为正整数；默认 640，短轴不足时不补边，随作业保存。
+    int defectAnomalyTileSize = 640;
+    /// 异常检测滑动步长，单位为像素，范围为 1～defectAnomalyTileSize；默认 480，随作业保存。
+    int defectAnomalyTileStride = 480;
     // 缺陷检测参数：目标置信度或归一化异常像素阈值，以及缺陷最小外接框面积。
     double defectDetThre = 0.5;
     int defectAreaThre = 100;
@@ -626,6 +630,16 @@ public:
      */
     bool setDefectModelType(DefectModelType modelType);
 
+    /**
+     * @brief 成对更新异常检测裁块大小和步长，使新参数在下次检测时生效。
+     * @param tileSize 正整数裁块边长上限，单位为像素；短轴不足时保持实际尺寸。
+     * @param stride 正整数滑动步长，单位为像素，必须不大于 tileSize，以保证选区完整覆盖。
+     * @throws std::invalid_argument 参数不满足约束时抛出，原有分块参数保持不变。
+     * @note 与缺陷推理共用互斥锁，避免推理读到不一致的参数组合；不重载模型、不清除结果或自动保存。
+     * 两个字段均仅影响异常检测分支，不改变 ONNX 网络尺寸及目标检测行为。
+     */
+    void setDefectAnomalyTiling(int tileSize, int stride);
+
     ///
     /// \brief acqfifo_complete 取像完成事件
     ///
@@ -753,6 +767,7 @@ public:
      * @details 保存时依次写入参数并以 JobWorkerEnd 结束；加载时按字段名恢复对象状态，
      * 包括定位训练阈值、最低匹配分数和缺陷模型类型。旧作业未包含 MinScore 时保留对象当前值，新对象默认为 0.5。
      * 加载前将缺陷模型类型重置为目标检测，旧作业缺少此字段时保持该默认值；无效类型记录日志并使用目标检测。
+     * 异常检测裁块大小和步长缺省为 640/480；读取到非正数或步长大于裁块大小时记录原因并恢复这组默认值。
      * @tparam Archive 支持 Boost.Serialization 读写、is_saving 和 is_loading 标记的归档类型。
      * @param ar 调用方持有的有效归档引用；保存时接收字段数据，加载时提供字段数据。
      * 调用期间归档及其底层流必须保持有效，流资源由调用方管理。
@@ -898,6 +913,12 @@ public:
             ar &name;
             int modelType = static_cast<int>(defectModelType);
             ar &modelType;
+            name = "defectAnomalyTileSize";
+            ar &name;
+            ar &defectAnomalyTileSize;
+            name = "defectAnomalyTileStride";
+            ar &name;
+            ar &defectAnomalyTileStride;
             name = "defectDetThre";
             ar &name;
             ar &defectDetThre;
@@ -951,6 +972,8 @@ public:
         {
             // 加载旧作业时不沿用上一个作业选择的异常检测类型。
             defectModelType = DefectModelType::ObjectDetection;
+            defectAnomalyTileSize = 640;
+            defectAnomalyTileStride = 480;
             while(true)
             {
                 try
@@ -1122,6 +1145,14 @@ public:
                             LOGE_HIGH(u8"作业缺陷模型类型无效：%d，使用默认目标检测模型。", modelType);
                         }
                     }
+                    else if(name.compare("defectAnomalyTileSize") == 0)
+                    {
+                        ar &defectAnomalyTileSize;
+                    }
+                    else if(name.compare("defectAnomalyTileStride") == 0)
+                    {
+                        ar &defectAnomalyTileStride;
+                    }
                     else if(name.compare("defectDetThre") == 0)
                     {
                         ar &defectDetThre;
@@ -1195,6 +1226,15 @@ public:
                     break;
                 }
             }
+            // 成对检查，避免字段读入顺序导致有效配置被过早判为无效。
+            if(defectAnomalyTileSize <= 0 || defectAnomalyTileStride <= 0 ||
+               defectAnomalyTileStride > defectAnomalyTileSize)
+            {
+                LOGE_HIGH(u8"作业异常检测分块参数无效：大小 %d，步长 %d，恢复默认 640/480。",
+                          defectAnomalyTileSize, defectAnomalyTileStride);
+                defectAnomalyTileSize = 640;
+                defectAnomalyTileStride = 480;
+            }
         }
     }
 
@@ -1212,7 +1252,7 @@ public:
 
     /**
      * @brief 使用当前所选模型执行缺陷检测，输出原图坐标的缺陷框和合格状态。
-     * @details 目标检测沿用整图推理、框中心位于选区和置信度/面积筛选；异常检测对选区分块推理后合并缺陷。
+     * @details 目标检测沿用整图推理、框中心位于选区和置信度/面积筛选；异常检测按本作业的裁块大小及步长分块后合并缺陷。
      * @param img 原始非空八位图像，支持灰度、BGR、BGRA、BGR565；按值传入但不修改共享像素。
      * @note 调用期间持有模型互斥锁，模型切换等待本次检测完成；调用方不得并发修改阈值、选区或读取结果。
      * 每次清空旧结果，空图、无效选区、未初始化或推理异常均记录原因并按不合格处理，不返回部分缺陷。

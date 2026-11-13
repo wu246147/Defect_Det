@@ -10,13 +10,14 @@ namespace
 {
 /**
  * @brief 生成单轴切块起点，覆盖尾部且不重复添加已贴边的末块。
- * @param length 正数轴长。
- * @return 从零开始的递增起点列表，短轴只生成一个起点。
+ * @param length 正整数轴长，单位为像素。
+ * @param tileSize 正整数裁块边长上限，单位为像素，由调用方验证有效性。
+ * @param stride 正整数步长，单位为像素，调用方保证不大于 tileSize。
+ * @return 从零开始的递增起点列表，短轴只生成一个起点，末块贴齐轴尾部。
+ * @note 不访问共享状态；返回列表自动管理内存，内存分配失败向调用方传播。
  */
-std::vector<int> axisStarts(int length)
+std::vector<int> axisStarts(int length, int tileSize, int stride)
 {
-    constexpr int tileSize = 640;
-    constexpr int stride = 480;
     std::vector<int> starts{0};
     const int last = (std::max)(0, length - tileSize);
     while(starts.back() < last)
@@ -41,17 +42,19 @@ void validateThresholds(double threshold, int minimumBoxArea)
 
 namespace DefectAnomaly
 {
-std::vector<cv::Rect> tileRegions(cv::Size size)
+std::vector<cv::Rect> tileRegions(cv::Size size, int tileSize, int stride)
 {
     if(size.width <= 0 || size.height <= 0)
         throw std::invalid_argument("异常检测 ROI 尺寸必须为正数。");
-    const auto xs = axisStarts(size.width);
-    const auto ys = axisStarts(size.height);
+    if(tileSize <= 0 || stride <= 0 || stride > tileSize)
+        throw std::invalid_argument("异常检测裁块大小和步长必须为正整数，且步长不能大于裁块大小。");
+    const auto xs = axisStarts(size.width, tileSize, stride);
+    const auto ys = axisStarts(size.height, tileSize, stride);
     std::vector<cv::Rect> regions;
     regions.reserve(xs.size() * ys.size());
     for(int y : ys)
         for(int x : xs)
-            regions.emplace_back(x, y, (std::min)(640, size.width), (std::min)(640, size.height));
+            regions.emplace_back(x, y, (std::min)(tileSize, size.width), (std::min)(tileSize, size.height));
     return regions;
 }
 
@@ -114,7 +117,8 @@ std::vector<DetectDetResult> extractDefects(const cv::Mat& anomalyMap, cv::Point
 }
 
 std::vector<DetectDetResult> detect(DinomalyOnnx& model, const cv::Mat& image,
-                                  const cv::Rect& selection, double threshold, int minimumBoxArea)
+                                  const cv::Rect& selection, double threshold, int minimumBoxArea,
+                                  int tileSize, int stride)
 {
     validateThresholds(threshold, minimumBoxArea);
     if(image.empty() || image.dims != 2 || image.depth() != CV_8U)
@@ -131,6 +135,7 @@ std::vector<DetectDetResult> detect(DinomalyOnnx& model, const cv::Mat& image,
         throw std::invalid_argument("异常检测选区与图像没有有效交集。");
     const cv::Rect roi(static_cast<int>(left), static_cast<int>(top),
                        static_cast<int>(right - left), static_cast<int>(bottom - top));
+    const auto regions = tileRegions(roi.size(), tileSize, stride);
     cv::Mat roiImage = image(roi);
     if(roiImage.channels() == 2)
         cv::cvtColor(roiImage, roiImage, cv::COLOR_BGR5652BGR);
@@ -141,7 +146,7 @@ std::vector<DetectDetResult> detect(DinomalyOnnx& model, const cv::Mat& image,
     }
 
     cv::Mat mergedMap = cv::Mat::zeros(roi.size(), CV_32FC1);
-    for(const cv::Rect& region : tileRegions(roi.size()))
+    for(const cv::Rect& region : regions)
     {
         AnomalyResult prediction;
         const int status = model.detect(roiImage(region), prediction);

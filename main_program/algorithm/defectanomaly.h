@@ -8,11 +8,15 @@
 namespace DefectAnomaly
 {
 /**
- * @brief 按训练数据的 640 像素块、480 像素步长覆盖 ROI，末块贴齐边界。
- * @param size 裁剪后的 ROI 尺寸；短边不足 640 时保持原尺寸，不补黑边。
- * @return 相对于 ROI 的切块矩形，按行排列；无效尺寸抛出参数异常。
+ * @brief 按指定裁块大小和滑动步长完整覆盖 ROI，末块贴齐边界。
+ * @param size 裁剪后的 ROI 宽高，单位为像素，必须均为正数；短边不足 tileSize 时保持原尺寸，不补边。
+ * @param tileSize 正整数裁块边长上限，单位为像素，默认 640；两轴使用相同上限。
+ * @param stride 正整数滑动步长，单位为像素，默认 480，必须不大于 tileSize，防止覆盖间隙。
+ * @return 相对于 ROI 的切块矩形，按行排列，末块不重复。
+ * @throws std::invalid_argument 尺寸、裁块大小或步长不满足上述约束时抛出。
+ * @note 仅分配返回的矩形列表，不修改图像或共享状态，可独立并发调用。
  */
-std::vector<cv::Rect> tileRegions(cv::Size size);
+std::vector<cv::Rect> tileRegions(cv::Size size, int tileSize = 640, int stride = 480);
 
 /**
  * @brief 将切块分数按逐像素最大值合并到 ROI 分数图，消除重叠切块的重复结果。
@@ -40,10 +44,16 @@ std::vector<DetectDetResult> extractDefects(const cv::Mat& anomalyMap, cv::Point
  * @param selection 整图中的检测选区，越界部分裁掉；完全越界或空选区抛出异常。
  * @param threshold 本次检测的像素阈值，调整后立即生效，无需重新加载模型。
  * @param minimumBoxArea 最小缺陷外接框面积。
+ * @param tileSize 正整数裁块边长上限，单位为像素，默认 640；短轴不足时保持原尺寸，不改变 ONNX 网络尺寸。
+ * @param stride 正整数滑动步长，单位为像素，默认 480，必须不大于 tileSize。
  * @return 所有有效缺陷；推理失败时抛出带模型错误原因的异常，不返回部分结果。
+ * @throws std::invalid_argument 图片、选区、阈值或分块参数无效时抛出。
+ * @note 分块参数每次调用时生效；调用方应串行使用同一模型，不得并发修改输入像素。
+ * 临时图像和结果由局部对象管理，输入图像及模型所有权仍归调用方。
  */
 std::vector<DetectDetResult> detect(DinomalyOnnx& model, const cv::Mat& image,
-                                  const cv::Rect& selection, double threshold, int minimumBoxArea);
+                                  const cv::Rect& selection, double threshold, int minimumBoxArea,
+                                  int tileSize = 640, int stride = 480);
 }
 
 #endif

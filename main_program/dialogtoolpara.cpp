@@ -1,5 +1,6 @@
 #include "dialogtoolpara.h"
 #include "ui_dialogtoolpara.h"
+#include <QSignalBlocker>
 
 DialogToolPara::DialogToolPara(QWidget *parent) :
     QDialog(parent),
@@ -534,6 +535,9 @@ void DialogToolPara::updata_control_value()
     ui->doubleSpinBox_object_detect_thre->setValue(jobmanager->jobworkers[cam_id].defectDetThre);
     ui->spinBox_defect_area_thre->setValue(jobmanager->jobworkers[cam_id].defectAreaThre);
     ui->comboBox_defect_model->setCurrentIndex(static_cast<int>(jobmanager->jobworkers[cam_id].defectModelType));
+    ui->spinBox_anomaly_tile_size->setValue(jobmanager->jobworkers[cam_id].defectAnomalyTileSize);
+    ui->spinBox_anomaly_tile_stride->setMaximum(jobmanager->jobworkers[cam_id].defectAnomalyTileSize);
+    ui->spinBox_anomaly_tile_stride->setValue(jobmanager->jobworkers[cam_id].defectAnomalyTileStride);
     updateDefectModelControls();
 
 
@@ -1075,6 +1079,12 @@ void DialogToolPara::on_spinBox_location_caliper_roi_w_valueChanged(int arg1)
 void DialogToolPara::updateDefectModelControls()
 {
     const bool isAnomaly = jobmanager->jobworkers[cam_id].defectModelType == DefectModelType::AnomalyDetection;
+    ui->label_anomaly_tile_size->setVisible(isAnomaly);
+    ui->spinBox_anomaly_tile_size->setVisible(isAnomaly);
+    ui->spinBox_anomaly_tile_size->setEnabled(isAnomaly);
+    ui->label_anomaly_tile_stride->setVisible(isAnomaly);
+    ui->spinBox_anomaly_tile_stride->setVisible(isAnomaly);
+    ui->spinBox_anomaly_tile_stride->setEnabled(isAnomaly);
     ui->label_2->setText(isAnomaly ? tr("异常像素阈值") : tr("置信度阈值"));
     ui->doubleSpinBox_object_detect_thre->setToolTip(isAnomaly
         ? tr("仅保留分数严格大于此值的异常像素（0～1）；数值越大，筛选越严格。")
@@ -1094,6 +1104,29 @@ void DialogToolPara::on_comboBox_defect_model_currentIndexChanged(int index)
         QMessageBox::warning(this, tr("模型初始化失败"),
             tr("所选缺陷检测模型初始化失败，请检查程序目录下的模型文件及初始化日志。"));
     }
+}
+
+void DialogToolPara::on_spinBox_anomaly_tile_size_valueChanged(int arg1)
+{
+    if(is_loading)
+    {
+        return;
+    }
+    const int stride = (std::min)(ui->spinBox_anomaly_tile_stride->value(), arg1);
+    jobmanager->jobworkers[cam_id].setDefectAnomalyTiling(arg1, stride);
+    // 减小裁块时自动缩小过大的步长，避免中间状态触发第二次参数写入。
+    const QSignalBlocker blocker(ui->spinBox_anomaly_tile_stride);
+    ui->spinBox_anomaly_tile_stride->setMaximum(arg1);
+    ui->spinBox_anomaly_tile_stride->setValue(stride);
+}
+
+void DialogToolPara::on_spinBox_anomaly_tile_stride_valueChanged(int arg1)
+{
+    if(is_loading)
+    {
+        return;
+    }
+    jobmanager->jobworkers[cam_id].setDefectAnomalyTiling(ui->spinBox_anomaly_tile_size->value(), arg1);
 }
 
 void DialogToolPara::on_doubleSpinBox_object_detect_thre_valueChanged(double arg1)

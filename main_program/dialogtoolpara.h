@@ -108,6 +108,7 @@ public:
      * 回填当前相机的定位、缺陷检测参数和仿真路径时，通过 is_loading 阻止槽函数反写参数，
      * 最后刷新仿真图片列表并重置其选中状态。
      * 缺陷模型下拉框随当前作业回填，阈值名称及提示按模型类型切换，回填不重复初始化模型。
+     * 同时回填异常检测裁块大小和步长，按裁块大小更新步长上限；仅选择异常检测时显示这两个参数。
      * @note 仅在界面线程调用；jobmanager 必须有效，cam_id 必须指向已有作业。
      * 本函数会修改控件状态，但不会自动保存作业或重新训练定位模型。
      */
@@ -132,6 +133,22 @@ private slots:
      * 初始化失败弹出提示并保留所选类型，后续检测按不合格处理；点击保存后才持久化选择。
      */
     void on_comboBox_defect_model_currentIndexChanged(int index);
+
+    /**
+     * @brief 修改异常检测裁块边长，并在必要时将滑动步长同步缩小到新的边长。
+     * @param arg1 控件提供的裁块边长上限，单位为像素，范围为 1～2147483647。
+     * @note 仅在界面线程且 jobmanager、cam_id 有效时调用，回填期间不反写。
+     * 成对更新作业参数并限制步长控件上限；使用信号阻断避免联动时重复写入，不重载模型或自动保存。
+     */
+    void on_spinBox_anomaly_tile_size_valueChanged(int arg1);
+
+    /**
+     * @brief 将异常检测滑动步长与当前控件裁块边长成对写入作业。
+     * @param arg1 控件提供的步长，单位为像素，范围由控件保证为 1～当前裁块大小。
+     * @note 仅在界面线程且 jobmanager、cam_id 有效时调用，回填期间不反写。
+     * 新参数在下次异常检测生效，与正在执行的缺陷推理串行更新，不重载模型或自动保存。
+     */
+    void on_spinBox_anomaly_tile_stride_valueChanged(int arg1);
 
     void on_comboBox_cam_currentIndexChanged(int index);
 
@@ -244,8 +261,9 @@ signals:
 
 private:
     /**
-     * @brief 根据当前作业的缺陷模型类型刷新阈值名称和取值提示。
+     * @brief 根据当前作业的缺陷模型类型刷新阈值提示和异常分块控件可见性。
      * @details 目标检测显示置信度及库内 0.5 下限，异常检测显示严格大于阈值的异常像素分数语义。
+     * 裁块大小、步长及其标签仅在异常检测模式下显示并启用，切回目标检测仍保留已设置的分块参数。
      * @note 仅在界面线程且 jobmanager、cam_id 有效时调用；只修改文字，不改变参数或初始化模型。
      */
     void updateDefectModelControls();

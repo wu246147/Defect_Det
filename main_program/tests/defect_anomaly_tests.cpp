@@ -1,5 +1,6 @@
 #include "defectanomaly.h"
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -55,6 +56,40 @@ void testTiles()
     }
     expectFailure([] { DefectAnomaly::tileRegions({0, 20}); }, "拒绝空 ROI");
     std::cout << "切块及边界覆盖验证通过\n";
+}
+
+/**
+ * @brief 验证自定义裁块大小和步长的边界覆盖、贴边、短边保留及非法输入处理。
+ * @details 对不同裁块配置构造覆盖图，确认无遗漏像素；同时验证极小块、无重叠及整数上限。
+ * @note 只处理合成矩形和局部图像，不加载模型或修改共享状态；校验失败向测试入口抛出异常。
+ */
+void testTileParameters()
+{
+    const auto custom = DefectAnomaly::tileRegions({403, 1908}, 256, 192);
+    check(custom.size() == 20 && custom.front() == cv::Rect(0, 0, 256, 256) &&
+          custom.back() == cv::Rect(147, 1652, 256, 256), "自定义裁块尺寸及步长必须实际参与切分");
+    for(const cv::Size settings : {cv::Size(256, 192), cv::Size(320, 320), cv::Size(1024, 768)})
+    {
+        const cv::Size size(403, 1908);
+        cv::Mat coverage = cv::Mat::zeros(size, CV_8UC1);
+        const auto tiles = DefectAnomaly::tileRegions(size, settings.width, settings.height);
+        for(const auto& tile : tiles)
+        {
+            check(tile.width == (std::min)(settings.width, size.width) &&
+                  tile.height == (std::min)(settings.width, size.height), "短边不足时保留原尺寸");
+            check((tile & cv::Rect({}, size)) == tile, "自定义切块不能越界");
+            coverage(tile).setTo(255);
+        }
+        check(cv::countNonZero(coverage) == size.area(), "自定义配置必须覆盖整个选区");
+    }
+    check(DefectAnomaly::tileRegions({3, 2}, 1, 1).size() == 6, "支持一像素裁块和步长");
+    check(DefectAnomaly::tileRegions({3, 2}, (std::numeric_limits<int>::max)(),
+          (std::numeric_limits<int>::max)()).size() == 1, "超大裁块上限仍保持小选区原尺寸");
+    expectFailure([] { DefectAnomaly::tileRegions({20, 30}, 0, 1); }, "拒绝零裁块");
+    expectFailure([] { DefectAnomaly::tileRegions({20, 30}, -1, 1); }, "拒绝负裁块");
+    expectFailure([] { DefectAnomaly::tileRegions({20, 30}, 10, 0); }, "拒绝零步长");
+    expectFailure([] { DefectAnomaly::tileRegions({20, 30}, 10, -1); }, "拒绝负步长");
+    expectFailure([] { DefectAnomaly::tileRegions({20, 30}, 10, 11); }, "拒绝会造成覆盖间隙的步长");
 }
 
 /** @brief 用跨切块的合成异常验证最大值融合、最低分数、孔洞排除及整图坐标还原。 */
@@ -176,12 +211,19 @@ void testModel(const char* modelPath, const char* imagePath)
 }
 }
 
-/** @brief 执行合成验证；可选传入模型和测试图路径继续执行真实模型集成验证，失败返回 1。 */
+/**
+ * @brief 验证默认及自定义分块、缺陷融合和错误处理，可选继续执行真实模型集成验证。
+ * @param argc 参数数量，只允许 1 或 3；3 表示附带模型及测试图片路径。
+ * @param argv 由运行时持有的参数数组；第二、三项分别为兼容的模型路径和图片路径，仅在 argc 为 3 时使用。
+ * @return 所有校验通过返回 0；参数、推理或校验失败输出原因并返回 1。
+ * @note 仅读取可选模型和图片，不启动相机或通讯；局部资源自动释放，异常在入口记录并转换为失败状态。
+ */
 int main(int argc, char** argv)
 {
     try
     {
         testTiles();
+        testTileParameters();
         testExtraction();
         testFailures();
         if(argc == 3)

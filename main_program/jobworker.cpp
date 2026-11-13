@@ -122,6 +122,8 @@ JobWorker::JobWorker(JobWorker *parent)
     this-> defectAreaThre =  parent->defectAreaThre;
     this-> defectDetThre =  parent->defectDetThre;
     this->defectModelType = parent->defectModelType;
+    this->defectAnomalyTileSize = parent->defectAnomalyTileSize;
+    this->defectAnomalyTileStride = parent->defectAnomalyTileStride;
 
 }
 
@@ -215,6 +217,8 @@ JobWorker::JobWorker(const JobWorker &jobworker)
     this-> defectAreaThre =  jobworker.defectAreaThre;
     this-> defectDetThre =  jobworker.defectDetThre;
     this->defectModelType = jobworker.defectModelType;
+    this->defectAnomalyTileSize = jobworker.defectAnomalyTileSize;
+    this->defectAnomalyTileStride = jobworker.defectAnomalyTileStride;
 
 }
 
@@ -318,6 +322,8 @@ JobWorker &JobWorker::operator =(const JobWorker &jobworker)
     this-> defectAreaThre =  jobworker.defectAreaThre;
     this-> defectDetThre =  jobworker.defectDetThre;
     this->defectModelType = jobworker.defectModelType;
+    this->defectAnomalyTileSize = jobworker.defectAnomalyTileSize;
+    this->defectAnomalyTileStride = jobworker.defectAnomalyTileStride;
 
     return *this;
 }
@@ -361,6 +367,17 @@ bool JobWorker::setDefectModelType(DefectModelType modelType)
     std::lock_guard<std::mutex> lock(defectModelMutex);
     defectModelType = modelType;
     return initializeDefectModel();
+}
+
+void JobWorker::setDefectAnomalyTiling(int tileSize, int stride)
+{
+    if(tileSize <= 0 || stride <= 0 || stride > tileSize)
+    {
+        throw std::invalid_argument(u8"异常检测裁块大小和步长必须为正整数，且步长不能大于裁块大小。");
+    }
+    std::lock_guard<std::mutex> lock(defectModelMutex);
+    defectAnomalyTileSize = tileSize;
+    defectAnomalyTileStride = stride;
 }
 
 bool JobWorker::initializeDefectModel()
@@ -681,11 +698,11 @@ void JobWorker::runDefectDetTool(cv::Mat img)
             {
                 throw std::runtime_error(u8"Dinomaly 模型未成功初始化，请检查模型路径及初始化日志。");
             }
-            LOGE(u8"开始 Dinomaly 选区分段检测，选区：%d,%d,%d,%d，像素阈值：%f，框面积阈值：%d",
+            LOGE(u8"开始 Dinomaly 选区分段检测，选区：%d,%d,%d,%d，像素阈值：%f，框面积阈值：%d，裁块大小：%d，步长：%d",
                  defectSelectBox.x, defectSelectBox.y, defectSelectBox.width, defectSelectBox.height,
-                 defectDetThre, defectAreaThre);
+                 defectDetThre, defectAreaThre, defectAnomalyTileSize, defectAnomalyTileStride);
             defectDetResults = DefectAnomaly::detect(*defectAnomalyModel, img, defectSelectBox,
-                               defectDetThre, defectAreaThre);
+                               defectDetThre, defectAreaThre, defectAnomalyTileSize, defectAnomalyTileStride);
         }
         else
         {

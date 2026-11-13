@@ -52,7 +52,31 @@
           <string>运行参数</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_3">
-          <item row="3" column="0">
+          <item row="2" column="1">
+           <widget class="QComboBox" name="comboBox_defect_model">
+            <property name="toolTip">
+             <string>选择后立即初始化模型；点击保存可将选择保存到当前作业。</string>
+            </property>
+            <item>
+             <property name="text">
+              <string>目标检测模型</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>异常检测模型</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>置信度阈值</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
            <widget class="QPushButton" name="pushButton_run">
             <property name="minimumSize">
              <size>
@@ -65,10 +89,71 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_2">
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_anomaly_tile_stride">
             <property name="text">
-             <string>置信度阈值</string>
+             <string>异常检测滑动步长</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_anomaly_tile_size">
+            <property name="text">
+             <string>异常检测裁块大小</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QSpinBox" name="spinBox_anomaly_tile_stride">
+            <property name="toolTip">
+             <string>异常检测滑动步长，单位为像素，范围为 1 到裁块大小；修改后下次检测生效，无需重载模型。</string>
+            </property>
+            <property name="keyboardTracking">
+             <bool>false</bool>
+            </property>
+            <property name="suffix">
+             <string> px</string>
+            </property>
+            <property name="prefix">
+             <string/>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>640</number>
+            </property>
+            <property name="value">
+             <number>480</number>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QSpinBox" name="spinBox_anomaly_tile_size">
+            <property name="toolTip">
+             <string>异常检测裁块边长上限，单位为像素；短边不足时保留实际尺寸，不改变模型网络尺寸。</string>
+            </property>
+            <property name="keyboardTracking">
+             <bool>false</bool>
+            </property>
+            <property name="suffix">
+             <string> px</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>2147483647</number>
+            </property>
+            <property name="value">
+             <number>640</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="spinBox_defect_area_thre">
+            <property name="maximum">
+             <number>9999999</number>
             </property>
            </widget>
           </item>
@@ -92,35 +177,11 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
-           <widget class="QSpinBox" name="spinBox_defect_area_thre">
-            <property name="maximum">
-             <number>9999999</number>
-            </property>
-           </widget>
-          </item>
           <item row="2" column="0">
            <widget class="QLabel" name="label_defect_model">
             <property name="text">
              <string>缺陷检测模型</string>
             </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QComboBox" name="comboBox_defect_model">
-            <property name="toolTip">
-             <string>选择后立即初始化模型；点击保存可将选择保存到当前作业。</string>
-            </property>
-            <item>
-             <property name="text">
-              <string>目标检测模型</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>异常检测模型</string>
-             </property>
-            </item>
            </widget>
           </item>
          </layout>
